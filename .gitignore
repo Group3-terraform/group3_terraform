@@ -1,0 +1,9 @@
+# Terraform State and Credentials
+*.tfplan
+.terraform/
+*.tfstate
+*.tfstate.backup
+# AWS/Provider credentials (if stored locally)
+*.pem
+*.key
+
