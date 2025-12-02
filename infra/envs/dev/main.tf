@@ -166,16 +166,12 @@ data "aws_lb" "ingress" {
 
 resource "aws_route53_record" "apps_ingress_dns" {
   zone_id = var.hosted_zone_id
-  name    = "api.dev.${var.domain}"
+  name    = "${var.subdomain}.${var.domain}"
   type    = "A"
 
   alias {
     name                   = module.ingress.ingress_hostname
-    zone_id                = data.aws_lb.ingress.zone_id
+    zone_id                = module.ingress.ingress_zone_id
     evaluate_target_health = false
   }
-
-  depends_on = [
-    module.ingress
-  ]
 }
