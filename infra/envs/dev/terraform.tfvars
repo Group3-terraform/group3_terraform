@@ -25,6 +25,6 @@ node_max     = 2
 domain          = "api.dev.theareak.click"
 tls_secret_name = "theareak-tls"
 
-service_a_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-a:latest"
-service_b_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-b:latest"
-service_c_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-c:latest"
+service_a_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-a:dev-v1.0.7"
+service_b_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-b:dev-v1.0.7"
+service_c_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-c:dev-v1.0.7"

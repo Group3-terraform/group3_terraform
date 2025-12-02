@@ -1,3 +1,13 @@
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.0"
+    }
+  }
+}
+
+
 # Namespace for our apps
 resource "kubernetes_namespace_v1" "apps" {
   metadata {

@@ -105,18 +105,35 @@ module "eks" {
 # Load EKS connection details after cluster exists
 ###################################################
 
-data "aws_eks_cluster" "this" {
-  name = module.eks.cluster_name
-}
+# data "aws_eks_cluster" "this" {
+#   name = module.eks.cluster_name
+# }
 
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
-}
+# data "aws_eks_cluster_auth" "this" {
+#   name = module.eks.cluster_name
+# }
+
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.this.endpoint
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+#   token                  = data.aws_eks_cluster_auth.this.token
+# }
 
 provider "kubernetes" {
-  host                   = data.aws_eks_cluster.this.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.this.token
+  host = module.eks.cluster_endpoint
+
+  cluster_ca_certificate = base64decode(module.eks.cluster_ca)
+
+  # Use AWS CLI to obtain a token dynamically
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = [
+      "eks",
+      "get-token",
+      "--cluster-name", module.eks.cluster_name,
+    ]
+  }
 }
 
 ##########################
@@ -129,6 +146,9 @@ module "ingress" {
   providers = {
     kubernetes = kubernetes
   }
+
+  # Make sure Kubernetes objects are only created AFTER EKS is ready
+  depends_on = [module.eks]
 
   domain          = var.domain
   tls_secret_name = var.tls_secret_name
