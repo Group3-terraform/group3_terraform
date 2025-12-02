@@ -16,6 +16,7 @@ resource "kubernetes_namespace_v1" "apps" {
 }
 
 locals {
+  full_domain = "${var.subdomain}.${var.domain}"
   services = [
     { name = "service-a"
         image = var.service_a_image 
@@ -127,24 +128,21 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
 
   spec {
     tls {
-      hosts      = [var.domain]
+      hosts       = [local.full_domain]
       secret_name = var.tls_secret_name
     }
 
     rule {
-      host = var.domain
+      host = local.full_domain
 
       http {
         path {
           path      = "/a"
           path_type = "Prefix"
-
           backend {
             service {
               name = kubernetes_service_v1.api["service-a"].metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -152,13 +150,10 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         path {
           path      = "/b"
           path_type = "Prefix"
-
           backend {
             service {
               name = kubernetes_service_v1.api["service-b"].metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -166,13 +161,10 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         path {
           path      = "/c"
           path_type = "Prefix"
-
           backend {
             service {
               name = kubernetes_service_v1.api["service-c"].metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -180,3 +172,4 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     }
   }
 }
+
