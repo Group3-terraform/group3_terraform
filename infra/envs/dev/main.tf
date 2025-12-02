@@ -120,21 +120,21 @@ module "eks" {
 # }
 
 provider "kubernetes" {
-  host = module.eks.cluster_endpoint
-
+  host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_ca)
 
-  # Use AWS CLI to obtain a token dynamically
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
     args        = [
       "eks",
+      "--region", "ap-southeast-1",
       "get-token",
       "--cluster-name", module.eks.cluster_name,
     ]
   }
 }
+
 
 ##########################
 # Ingress + Services
