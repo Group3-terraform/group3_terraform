@@ -123,9 +123,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     annotations = {
       "kubernetes.io/ingress.class"               = "alb"
       "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"     = "ip"
       "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
       "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
-      "alb.ingress.kubernetes.io/target-type"     = "ip"
     }
   }
 
@@ -140,7 +140,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-a"].metadata[0].name
-              port { number = 80 }
+              port {
+                number = 80
+              }
             }
           }
         }
@@ -151,7 +153,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-b"].metadata[0].name
-              port { number = 80 }
+              port {
+                number = 80
+              }
             }
           }
         }
@@ -162,7 +166,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-c"].metadata[0].name
-              port { number = 80 }
+              port {
+                number = 80
+              }
             }
           }
         }
