@@ -23,7 +23,3 @@ variable "tls_secret_name" {
 variable "subdomain" {
   type = string
 }
-
-variable "tls_secret_name" {
-  type = string
-}
