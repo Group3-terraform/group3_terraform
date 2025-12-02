@@ -122,8 +122,11 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     name      = "apps-ingress"
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-    }
+    "kubernetes.io/ingress.class"               = "nginx"
+    "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
+    "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
+    "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
+  }
   }
 
   spec {

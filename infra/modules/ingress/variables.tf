@@ -19,6 +19,10 @@ variable "tls_secret_name" {
   description = "Kubernetes TLS secret for NGINX ingress (cert + key)"
 }
 
+variable "acm_certificate_arn" {
+  type = string
+}
+
 
 variable "subdomain" {
   type = string
