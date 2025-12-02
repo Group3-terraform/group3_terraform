@@ -20,7 +20,7 @@ private_subnets = [
 
 hosted_zone_id  = "Z07852252OWMU8O090PPL"
 domain          = "theareak.click"
-subdomain       = "dev.api"
+subdomain       = "api.dev"
 
 node_min     = 1
 node_desired = 1

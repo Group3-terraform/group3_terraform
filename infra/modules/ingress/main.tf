@@ -128,12 +128,12 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
 
   spec {
     tls {
-      hosts       = [local.full_domain]
+      hosts       = [local.full_domain]     # ✅ use full_domain
       secret_name = var.tls_secret_name
     }
 
     rule {
-      host = local.full_domain
+      host = local.full_domain              # ✅ use full_domain
 
       http {
         path {
@@ -142,7 +142,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-a"].metadata[0].name
-              port { number = 80 }
+              port {
+                number = 80
+              }
             }
           }
         }
@@ -153,7 +155,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-b"].metadata[0].name
-              port { number = 80 }
+              port {
+                number = 80
+              }
             }
           }
         }
@@ -164,7 +168,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-c"].metadata[0].name
-              port { number = 80 }
+              port {
+                number = 80
+              }
             }
           }
         }

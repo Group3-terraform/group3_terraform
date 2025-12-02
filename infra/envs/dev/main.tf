@@ -149,17 +149,22 @@ module "ingress" {
     kubernetes = kubernetes
   }
 
-  # Make sure Kubernetes objects are only created AFTER EKS is ready
   depends_on = [module.eks]
 
-  domain          = var.domain
+  # NEW: pass subdomain down to the module
+  domain    = var.domain
+  subdomain = var.subdomain
+
   tls_secret_name = var.tls_secret_name
 
   service_a_image = var.service_a_image
   service_b_image = var.service_b_image
   service_c_image = var.service_c_image
 }
+
+##########################
 #Route 53 Record for Ingress
+###########################
 resource "aws_route53_record" "apps_ingress_dns" {
   zone_id = var.hosted_zone_id
 
