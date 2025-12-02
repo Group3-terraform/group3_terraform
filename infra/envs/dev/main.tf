@@ -160,14 +160,13 @@ module "ingress" {
   service_c_image = var.service_c_image
 }
 #Route 53 Record for Ingress
-data "aws_lb" "ingress" {
-  name = split("-", split(".", module.ingress.ingress_hostname)[0])[0]
-}
-
 resource "aws_route53_record" "apps_ingress_dns" {
   zone_id = var.hosted_zone_id
-  name    = "${var.subdomain}.${var.domain}" 
-  type    = "A"
+
+  name = "${var.subdomain}.${var.domain}"  
+  # Example result = api.dev.theareak.click
+
+  type = "A"
 
   alias {
     name                   = module.ingress.ingress_hostname

@@ -18,14 +18,14 @@ private_subnets = [
   "10.0.48.0/20",
 ]
 
-hosted_zone_id = "Z07852252OWMU8O090PPL"
-
+hosted_zone_id  = "Z07852252OWMU8O090PPL"
+domain          = "theareak.click"
+subdomain       = "dev.api"
 
 node_min     = 1
 node_desired = 1
 node_max     = 2
 
-domain          = "api.dev.theareak.click"
 tls_secret_name = "theareak-tls"
 
 service_a_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-a:dev-v1.0.7"
