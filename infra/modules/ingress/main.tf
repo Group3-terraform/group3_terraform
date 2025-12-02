@@ -115,28 +115,23 @@ resource "kubernetes_service_v1" "api" {
     type = "ClusterIP"
   }
 }
-
-# Ingress (NGINX)
 resource "kubernetes_ingress_v1" "apps_ingress" {
   metadata {
     name      = "apps-ingress"
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
+
     annotations = {
-    "kubernetes.io/ingress.class"               = "alb"
-    "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
-    "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
-    "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
-  }
+      "kubernetes.io/ingress.class"               = "alb"
+      "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
+      "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
+      "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/target-type"     = "ip"
+    }
   }
 
   spec {
-    tls {
-      hosts       = [local.full_domain]     # ✅ use full_domain
-      secret_name = var.tls_secret_name
-    }
-
     rule {
-      host = local.full_domain              # ✅ use full_domain
+      host = local.full_domain
 
       http {
         path {
@@ -145,9 +140,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-a"].metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -158,9 +151,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-b"].metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -171,9 +162,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.api["service-c"].metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -181,4 +170,3 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     }
   }
 }
-
