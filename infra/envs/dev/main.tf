@@ -166,7 +166,7 @@ data "aws_lb" "ingress" {
 
 resource "aws_route53_record" "apps_ingress_dns" {
   zone_id = var.hosted_zone_id
-  name    = "${var.subdomain}.${var.domain}"
+  name    = "${var.subdomain}.${var.domain}" 
   type    = "A"
 
   alias {
@@ -175,3 +175,4 @@ resource "aws_route53_record" "apps_ingress_dns" {
     evaluate_target_health = false
   }
 }
+
