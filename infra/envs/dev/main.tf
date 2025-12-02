@@ -152,8 +152,11 @@ module "ingress" {
   depends_on = [module.eks]
 
   # NEW: pass subdomain down to the module
+  
   domain    = var.domain
   subdomain = var.subdomain
+
+  acm_certificate_arn = var.acm_certificate_arn
 
   tls_secret_name = var.tls_secret_name
 
