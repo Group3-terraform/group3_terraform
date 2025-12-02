@@ -18,6 +18,9 @@ private_subnets = [
   "10.0.48.0/20",
 ]
 
+hosted_zone_id = var.hosted_zone_id
+
+
 node_min     = 1
 node_desired = 1
 node_max     = 2
