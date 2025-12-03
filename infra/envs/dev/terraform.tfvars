@@ -19,6 +19,8 @@ private_subnets = [
 ]
 
 hosted_zone_id  = "Z07852252OWMU8O090PPL"
+zone_id = "Z07852252OWMU8O090PPL"
+
 domain          = "theareak.click"
 subdomain       = "api.dev"
 

@@ -169,15 +169,15 @@ module "ingress" {
 #Route 53 Record for Ingress
 ###########################
 resource "aws_route53_record" "apps_ingress_dns" {
-  zone_id = var.hosted_zone_id
+  zone_id = var.zone_id            # <-- YOUR hosted zone ID (theareak.click)
   type    = "A"
 
-  # fail early if hostname is missing
-  name = module.ingress.ingress_hostname != "" ? "api.dev.theareak.click" : ""
+  # Only create the record when ALB hostname is available
+  name = module.ingress.ingress_hostname != "" ? "api.dev.theareak.click" : null
 
   alias {
     name                   = module.ingress.ingress_hostname
-    zone_id                = data.aws_elb_hosted_zone_id.main.zone_id
+    zone_id                = data.aws_elb_hosted_zone_id.main.zone_id  
     evaluate_target_health = false
   }
 
@@ -185,6 +185,7 @@ resource "aws_route53_record" "apps_ingress_dns" {
     module.ingress
   ]
 }
+
 
 ###############################
 # ACM Certificate must be created in us-east-1 for ALB to use with HTTPS
