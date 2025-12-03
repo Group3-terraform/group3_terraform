@@ -183,3 +183,12 @@ resource "aws_route53_record" "apps_ingress_dns" {
   }
 }
 
+###############################
+# ACM Certificate must be created in us-east-1 for ALB to use with HTTPS
+################################
+module "acm" {
+  source = "../../modules/acm"
+
+  full_domain    = "api.dev.theareak.click"
+  hosted_zone_id = var.hosted_zone_id
+}

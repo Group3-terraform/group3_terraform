@@ -123,9 +123,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     annotations = {
       "kubernetes.io/ingress.class"               = "alb"
       "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type"     = "ip"
       "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
       "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/target-type"     = "ip"
     }
   }
 
