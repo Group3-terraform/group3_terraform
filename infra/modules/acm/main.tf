@@ -2,12 +2,10 @@ resource "aws_acm_certificate" "this" {
   domain_name       = var.full_domain
   validation_method = "DNS"
 
+  subject_alternative_names = [var.full_domain]
+
   lifecycle {
     create_before_destroy = true
-  }
-
-  tags = {
-    Name = "Certificate for ${var.full_domain}"
   }
 }
 

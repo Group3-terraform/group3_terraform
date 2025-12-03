@@ -163,9 +163,8 @@ module "ingress" {
 
   depends_on = [module.eks, module.acm]
 
-  domain    = var.domain
-  subdomain = var.subdomain
-
+  domain              = var.domain
+  subdomain           = var.subdomain
   acm_certificate_arn = module.acm.acm_certificate_arn
 
   tls_secret_name = var.tls_secret_name
