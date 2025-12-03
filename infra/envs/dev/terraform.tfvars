@@ -28,7 +28,9 @@ node_min     = 1
 node_desired = 1
 node_max     = 2
 
-acm_certificate_arn = "arn:aws:acm:ap-southeast-1:570430250751:certificate/e3cbd69a-a211-4a6f-b524-092ce77e694b"
+# acm_certificate_arn = "arn:aws:acm:ap-southeast-1:570430250751:certificate/e3cbd69a-a211-4a6f-b524-092ce77e694b"
+acm_certificate_arn = "arn:aws:acm:ap-southeast-1:570430250751:certificate/5cbb7afa-f071-4bba-b861-7fb0789fa78c"
+
 
 tls_secret_name = "theareak-tls"
 
