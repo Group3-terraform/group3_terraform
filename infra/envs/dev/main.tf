@@ -145,7 +145,7 @@ provider "kubernetes" {
 ###########################
 module "acm" {
   source = "../../modules/acm"
-  full_domain    = "api.${var.subdomain}.${var.domain}"
+  full_domain    = "${var.subdomain}.${var.domain}"
   hosted_zone_id = var.hosted_zone_id
 }
 
