@@ -54,6 +54,11 @@ variable "service_c_image" {
   type = string
 }
 
+data "aws_elb_hosted_zone_id" "main" {
+  region = var.region
+}
+
+
 ##########################
 # IAM module
 ##########################
