@@ -4,7 +4,12 @@ variable "environment" {}
 variable "cluster_name" {}
 variable "region" {}
 
-variable "oidc_provider_arn" {}
-variable "oidc_provider_url" {}
 
 variable "acm_certificate_arn" {}
+variable "oidc_provider_url" {
+  type = string
+}
+
+variable "oidc_provider_arn" {
+  type = string
+}

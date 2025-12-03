@@ -168,7 +168,7 @@ module "ingress" {
   region       = var.region
 
   oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = module.eks.oidc_provider
+  oidc_provider_url = module.eks.oidc_provider_url
 
   acm_certificate_arn = module.acm.acm_certificate_arn
 }
