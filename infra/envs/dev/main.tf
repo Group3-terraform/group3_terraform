@@ -170,17 +170,20 @@ module "ingress" {
 ###########################
 resource "aws_route53_record" "apps_ingress_dns" {
   zone_id = var.hosted_zone_id
+  type    = "A"
 
-  name = "${var.subdomain}.${var.domain}"  
-  # Example result = api.dev.theareak.click
-
-  type = "A"
+  # fail early if hostname is missing
+  name = module.ingress.ingress_hostname != "" ? "api.dev.theareak.click" : ""
 
   alias {
     name                   = module.ingress.ingress_hostname
-    zone_id                = module.ingress.ingress_zone_id
+    zone_id                = data.aws_elb_hosted_zone_id.main.zone_id
     evaluate_target_health = false
   }
+
+  depends_on = [
+    module.ingress
+  ]
 }
 
 ###############################
