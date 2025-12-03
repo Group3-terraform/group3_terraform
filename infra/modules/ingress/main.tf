@@ -52,7 +52,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     ingress_class_name = "alb"
 
     rule {
-      host = "api.${var.subdomain}.${var.domain}"
+      host = "${var.subdomain}.${var.domain}"
 
       http {
         path {
