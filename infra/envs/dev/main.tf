@@ -67,7 +67,11 @@ module "iam" {
   source       = "../../modules/iam"
   project_name = var.project_name
   environment  = var.environment
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
 }
+
 
 ##########################
 # VPC module
@@ -161,17 +165,18 @@ module "ingress" {
     kubernetes = kubernetes
   }
 
-  depends_on = [module.eks, module.acm]
+  depends_on = [module.eks]
 
   domain              = var.domain
   subdomain           = var.subdomain
-  acm_certificate_arn = module.acm.acm_certificate_arn
-
-  tls_secret_name = var.tls_secret_name
+  acm_certificate_arn = var.acm_certificate_arn
+  tls_secret_name     = var.tls_secret_name
 
   service_a_image = var.service_a_image
   service_b_image = var.service_b_image
   service_c_image = var.service_c_image
+
+  alb_role_arn = module.iam.alb_controller_role_arn
 }
 
 resource "aws_iam_role_policy_attachment" "lb_controller_attach" {
@@ -193,7 +198,7 @@ resource "aws_route53_record" "apps_ingress_dns" {
   for_each = module.ingress.ingress_hostname != "" ? { create = 1 } : {}
 
   zone_id = var.zone_id
-  name    = "api.${var.subdomain}.${var.domain}"
+  name    = "${var.subdomain}.${var.domain}"
   type    = "A"
 
   alias {

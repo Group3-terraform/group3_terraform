@@ -20,10 +20,16 @@ variable "tls_secret_name" {
 }
 
 variable "acm_certificate_arn" {
-  type = string
+  type        = string
+  description = "ACM Certificate ARN used for the ALB Ingress Controller"
 }
 
 
+
 variable "subdomain" {
+  type = string
+}
+
+variable "alb_role_arn" {
   type = string
 }
