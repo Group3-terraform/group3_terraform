@@ -1,14 +1,9 @@
 ###############################
-# Global variables
+# Load global project variables
 ###############################
 
 variable "project_name" {}
 variable "environment"  {}
-
-variable "region" {
-  type    = string
-  default = "ap-southeast-1"
-}
 
 variable "cluster_version" {
   type    = string
@@ -27,30 +22,42 @@ variable "private_subnets" {
   type = list(string)
 }
 
-variable "node_min" { type = number }
-variable "node_desired" { type = number }
-variable "node_max" { type = number }
+variable "node_min" {
+  type = number
+}
 
-variable "domain" { type = string }
-variable "subdomain" { type = string }
+variable "node_desired" {
+  type = number
+}
 
-variable "tls_secret_name" { type = string }
+variable "node_max" {
+  type = number
+}
 
-variable "service_a_image" { type = string }
-variable "service_b_image" { type = string }
-variable "service_c_image" { type = string }
+variable "domain" {
+  type = string
+}
 
-variable "acm_certificate_arn" { type = string }
-variable "zone_id" { type = string }
-variable "hosted_zone_id" { type = string }
+variable "tls_secret_name" {
+  type = string
+}
 
-############################################
-# Get Hosted Zone ID for ALB (AWS provided)
-############################################
+variable "service_a_image" {
+  type = string
+}
+
+variable "service_b_image" {
+  type = string
+}
+
+variable "service_c_image" {
+  type = string
+}
 
 data "aws_elb_hosted_zone_id" "main" {
   region = var.region
 }
+
 
 ##########################
 # IAM module
@@ -99,9 +106,23 @@ module "eks" {
   node_max     = var.node_max
 }
 
-#############################################
-# Kubernetes Provider
-#############################################
+###################################################
+# Load EKS connection details after cluster exists
+###################################################
+
+# data "aws_eks_cluster" "this" {
+#   name = module.eks.cluster_name
+# }
+
+# data "aws_eks_cluster_auth" "this" {
+#   name = module.eks.cluster_name
+# }
+
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.this.endpoint
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+#   token                  = data.aws_eks_cluster_auth.this.token
+# }
 
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
@@ -110,25 +131,17 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
+
     args = [
       "eks",
-      "--region", var.region,
+      "--region", "ap-southeast-1",
       "get-token",
       "--cluster-name", module.eks.cluster_name
     ]
   }
 }
 
-##########################
-# ACM Certificate (us-east-1)
-##########################
 
-module "acm" {
-  source = "../../modules/acm"
-
-  full_domain    = "api.dev.theareak.click"
-  hosted_zone_id = var.hosted_zone_id
-}
 
 ##########################
 # Ingress + Services
@@ -141,38 +154,32 @@ module "ingress" {
     kubernetes = kubernetes
   }
 
-  depends_on = [
-    module.eks,
-    module.acm
-  ]
+  depends_on = [module.eks]
 
+  # NEW: pass subdomain down to the module
+  
   domain    = var.domain
   subdomain = var.subdomain
 
   acm_certificate_arn = var.acm_certificate_arn
-  tls_secret_name     = var.tls_secret_name
+
+  tls_secret_name = var.tls_secret_name
 
   service_a_image = var.service_a_image
   service_b_image = var.service_b_image
   service_c_image = var.service_c_image
 }
 
-#############################################
-# Local values for ALB
-#############################################
-
 locals {
-  alb_hostname   = module.ingress.ingress_hostname
-  create_record  = length(local.alb_hostname) > 0
+  alb_hostname = module.ingress.ingress_hostname
+  create_record = length(local.alb_hostname) > 0
 }
 
-#############################################
-# Route53 alias record -> ALB
-#############################################
-
+##########################
+#Route 53 Record for Ingress
+###########################
 resource "aws_route53_record" "apps_ingress_dns" {
   count   = local.create_record ? 1 : 0
-
   zone_id = var.zone_id
   name    = "api.dev.theareak.click"
   type    = "A"
@@ -183,5 +190,19 @@ resource "aws_route53_record" "apps_ingress_dns" {
     evaluate_target_health = false
   }
 
-  depends_on = [module.ingress]
+  depends_on = [
+    module.ingress
+  ]
 }
+
+
+###############################
+# ACM Certificate must be created in us-east-1 for ALB to use with HTTPS
+################################
+module "acm" {
+  source = "../../modules/acm"
+
+  full_domain    = "api.dev.theareak.click"
+  hosted_zone_id = var.hosted_zone_id
+}
+
