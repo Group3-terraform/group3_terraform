@@ -8,6 +8,7 @@ terraform {
 }
 
 
+
 # Namespace for our apps
 resource "kubernetes_namespace_v1" "apps" {
   metadata {
@@ -116,6 +117,8 @@ resource "kubernetes_service_v1" "api" {
   }
 }
 resource "kubernetes_ingress_v1" "apps_ingress" {
+  wait_for_load_balancer = true
+
   metadata {
     name      = "apps-ingress"
     namespace = kubernetes_namespace_v1.apps.metadata[0].name

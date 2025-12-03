@@ -1,14 +1,10 @@
 output "ingress_name" {
   value = kubernetes_ingress_v1.apps_ingress.metadata[0].name
 }
+
 output "ingress_hostname" {
   value = try(
     kubernetes_ingress_v1.apps_ingress.status[0].load_balancer[0].ingress[0].hostname,
     ""
   )
-}
-
-
-output "ingress_zone_id" {
-  value = "ZKVM4W9LS7TM"
 }
