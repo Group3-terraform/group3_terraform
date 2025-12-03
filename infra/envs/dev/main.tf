@@ -175,6 +175,12 @@ resource "aws_iam_role_policy_attachment" "lb_controller_attach" {
   policy_arn = module.iam.lb_controller_policy_arn
 }
 
+resource "aws_iam_role_policy_attachment" "lb_controller_node_attach" {
+  role       = module.eks.node_role_name
+  policy_arn = module.iam.lb_controller_policy_arn
+}
+
+
 
 locals {
   alb_hostname = module.ingress.ingress_hostname

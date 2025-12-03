@@ -8,7 +8,6 @@ output "node_role_arn" {
 output "lb_controller_policy_arn" {
   value = aws_iam_policy.aws_load_balancer_controller_policy.arn
 }
-
 output "node_role_name" {
-  value = aws_iam_role.node_role.name
+  value = aws_iam_role.node.name
 }

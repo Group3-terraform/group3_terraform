@@ -45,14 +45,11 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
 }
 
 resource "aws_iam_policy" "aws_load_balancer_controller_policy" {
-  name   = "${var.project_name}-${var.environment}-lb-controller-policy"
-  policy = file("${path.module}/iam_policy.json")
+  name        = "${var.project_name}-${var.environment}-lb-controller-policy"
+  description = "Policy for AWS Load Balancer Controller"
+  policy      = file("${path.module}/iam_policy.json")
 }
 
 
-resource "aws_iam_role_policy_attachment" "lb_controller_node_attach" {
-  role       = module.eks.node_role_name   
-  policy_arn = module.iam.lb_controller_policy_arn
-}
 
 
