@@ -124,7 +124,6 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
 
     annotations = {
-      "kubernetes.io/ingress.class"               = "alb"
       "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
       "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
       "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
@@ -133,16 +132,19 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
   }
 
   spec {
+    ingress_class_name = "alb"
+
     rule {
       host = local.full_domain
 
       http {
         path {
-          path      = "/a"
+          path = "/a"
           path_type = "Prefix"
+
           backend {
             service {
-              name = kubernetes_service_v1.api["service-a"].metadata[0].name
+              name = kubernetes_service_v1.service_a.metadata[0].name
               port {
                 number = 80
               }
@@ -151,11 +153,12 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         }
 
         path {
-          path      = "/b"
+          path = "/b"
           path_type = "Prefix"
+
           backend {
             service {
-              name = kubernetes_service_v1.api["service-b"].metadata[0].name
+              name = kubernetes_service_v1.service_b.metadata[0].name
               port {
                 number = 80
               }
@@ -164,11 +167,12 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         }
 
         path {
-          path      = "/c"
+          path = "/c"
           path_type = "Prefix"
+
           backend {
             service {
-              name = kubernetes_service_v1.api["service-c"].metadata[0].name
+              name = kubernetes_service_v1.service_c.metadata[0].name
               port {
                 number = 80
               }
@@ -179,3 +183,4 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     }
   }
 }
+
