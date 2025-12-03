@@ -26,6 +26,8 @@ node_min     = 1
 node_desired = 1
 node_max     = 2
 
+acm_certificate_arn = "arn:aws:acm:ap-southeast-1:570430250751:certificate/e3cbd69a-a211-4a6f-b524-092ce77e694b"
+
 tls_secret_name = "theareak-tls"
 
 service_a_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-a:dev-v1.0.7"
