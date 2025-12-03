@@ -174,15 +174,15 @@ module "ingress" {
 #Route 53 Record for Ingress
 ###########################
 resource "aws_route53_record" "apps_ingress_dns" {
-  zone_id = var.zone_id            # <-- YOUR hosted zone ID (theareak.click)
+  zone_id = var.zone_id
   type    = "A"
 
-  # Only create the record when ALB hostname is available
   name = module.ingress.ingress_hostname != "" ? "api.dev.theareak.click" : null
 
   alias {
     name                   = module.ingress.ingress_hostname
-    zone_id                = data.aws_elb_hosted_zone_id.main.zone_id  
+    zone_id                = data.aws_elb_hosted_zone_id.main.id
+
     evaluate_target_health = false
   }
 
