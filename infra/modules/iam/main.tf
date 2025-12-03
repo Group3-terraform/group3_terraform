@@ -45,9 +45,10 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
 }
 
 resource "aws_iam_policy" "aws_load_balancer_controller_policy" {
-  name = "AWSLoadBalancerControllerIAMPolicy"
+  name   = "${var.project_name}-${var.environment}-lb-controller-policy"
   policy = file("${path.module}/iam_policy.json")
 }
+
 
 resource "aws_iam_role_policy_attachment" "lb_controller_node_attach" {
   role       = aws_iam_role.node_role.name
