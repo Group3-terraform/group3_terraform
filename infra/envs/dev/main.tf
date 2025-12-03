@@ -170,6 +170,11 @@ module "ingress" {
   service_c_image = var.service_c_image
 }
 
+resource "aws_iam_role_policy_attachment" "lb_controller_attach" {
+  role       = module.iam.node_role_name
+  policy_arn = module.iam.lb_controller_policy_arn
+}
+
 
 locals {
   alb_hostname = module.ingress.ingress_hostname

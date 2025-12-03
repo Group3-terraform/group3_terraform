@@ -51,6 +51,8 @@ resource "aws_iam_policy" "aws_load_balancer_controller_policy" {
 
 
 resource "aws_iam_role_policy_attachment" "lb_controller_node_attach" {
-  role       = aws_iam_role.node_role.name
-  policy_arn = aws_iam_policy.aws_load_balancer_controller_policy.arn
+  role       = module.eks.node_role_name   
+  policy_arn = module.iam.lb_controller_policy_arn
 }
+
+
