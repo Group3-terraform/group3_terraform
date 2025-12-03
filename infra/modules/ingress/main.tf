@@ -63,30 +63,27 @@ resource "helm_release" "alb_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
 
-  set {
-    name  = "clusterName"
-    value = var.cluster_name
-  }
-
-  set {
-    name  = "region"
-    value = var.region
-  }
-
-  # Must disable creation because Terraform creates SA
-  set {
-    name  = "serviceAccount.create"
-    value = "false"
-  }
-
-  set {
-    name  = "serviceAccount.name"
-    value = kubernetes_service_account_v1.alb_sa.metadata[0].name
-  }
+  set = [
+    {
+      name  = "clusterName"
+      value = var.cluster_name
+    },
+    {
+      name  = "region"
+      value = var.region
+    },
+    {
+      name  = "serviceAccount.create"
+      value = "false"
+    },
+    {
+      name  = "serviceAccount.name"
+      value = kubernetes_service_account_v1.alb_sa.metadata[0].name
+    }
+  ]
 
   depends_on = [
-    kubernetes_service_account_v1.alb_sa,
-    aws_iam_role_policy_attachment.alb_policy_attach
+    kubernetes_service_account_v1.alb_sa
   ]
 }
 
