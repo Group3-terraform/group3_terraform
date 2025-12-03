@@ -31,16 +31,16 @@ locals {
   ]
 }
 
-resource "kubernetes_service_account_v1" "alb_sa" {
-  depends_on = [var.alb_role_arn]
-  metadata {
-    name      = "aws-load-balancer-controller"
-    namespace = "kube-system"
-    annotations = {
-      "eks.amazonaws.com/role-arn" = var.alb_role_arn
-    }
-  }
-}
+# resource "kubernetes_service_account_v1" "alb_sa" {
+#   depends_on = [var.alb_role_arn]
+#   metadata {
+#     name      = "aws-load-balancer-controller"
+#     namespace = "kube-system"
+#     annotations = {
+#       "eks.amazonaws.com/role-arn" = var.alb_role_arn
+#     }
+#   }
+# }
 
 
 # Deployments for each service
