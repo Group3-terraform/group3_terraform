@@ -180,19 +180,21 @@ locals {
 #Route 53 Record for Ingress
 ###########################
 resource "aws_route53_record" "apps_ingress_dns" {
+  for_each = module.ingress.ingress_hostname != "" ? { create = 1 } : {}
+
   zone_id = var.zone_id
-  name    = "api.dev.theareak.click"
+  name    = "api.${var.subdomain}.${var.domain}"
   type    = "A"
+
   alias {
-    name                   = local.alb_hostname
+    name                   = module.ingress.ingress_hostname
     zone_id                = data.aws_elb_hosted_zone_id.main.id
     evaluate_target_health = false
   }
 
-  depends_on = [
-    module.ingress
-  ]
+  depends_on = [module.ingress]
 }
+
 
 
 ###############################
