@@ -5,15 +5,11 @@ module "eks" {
   cluster_name    = "${var.project_name}-${var.environment}-eks"
   cluster_version = var.cluster_version
 
-  enable_irsa = true
+  enable_irsa = true   # <<------ IMPORTANT
 
   iam_role_arn = var.iam_role_arn
   vpc_id       = var.vpc_id
   subnet_ids   = var.private_subnets
-
-  # FIX: Allow Terraform/kubectl to reach EKS API
-  cluster_endpoint_public_access  = true
-  cluster_endpoint_private_access = true
 
   eks_managed_node_groups = {
     default = {
@@ -28,3 +24,4 @@ module "eks" {
     }
   }
 }
+
