@@ -170,19 +170,23 @@ module "ingress" {
   service_c_image = var.service_c_image
 }
 
+locals {
+  alb_hostname = module.ingress.ingress_hostname
+  create_record = length(local.alb_hostname) > 0
+}
+
 ##########################
 #Route 53 Record for Ingress
 ###########################
 resource "aws_route53_record" "apps_ingress_dns" {
+  count   = local.create_record ? 1 : 0
   zone_id = var.zone_id
+  name    = "api.dev.theareak.click"
   type    = "A"
 
-  name = module.ingress.ingress_hostname != "" ? "api.dev.theareak.click" : null
-
   alias {
-    name                   = module.ingress.ingress_hostname
+    name                   = local.alb_hostname
     zone_id                = data.aws_elb_hosted_zone_id.main.id
-
     evaluate_target_health = false
   }
 
