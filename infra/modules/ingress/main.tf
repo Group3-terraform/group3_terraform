@@ -1,49 +1,100 @@
-terraform {
-  required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = ">= 2.0"
-    }
-  }
-}
-
-
-
-# Namespace for our apps
+###############################
+# Namespace
+###############################
 resource "kubernetes_namespace_v1" "apps" {
   metadata {
     name = "apps"
   }
 }
 
-locals {
-  full_domain = "${var.subdomain}.${var.domain}"
-  services = [
-    { name = "service-a"
-        image = var.service_a_image 
-    },
-    { name = "service-b"
-        image = var.service_b_image 
-    },
-    { name = "service-c"
-        image = var.service_c_image 
-    },
+###############################
+# ALB Controller IRSA IAM Role
+###############################
+
+data "aws_iam_policy_document" "alb_assume_role" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(var.oidc_provider_url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+    }
+  }
+}
+
+resource "aws_iam_role" "alb_controller" {
+  name               = "${var.project_name}-${var.environment}-alb-controller"
+  assume_role_policy = data.aws_iam_policy_document.alb_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "alb_policy_attach" {
+  role       = aws_iam_role.alb_controller.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSLoadBalancerControllerIAMPolicy"
+}
+
+###############################
+# ALB ServiceAccount
+###############################
+
+resource "kubernetes_service_account_v1" "alb_sa" {
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = "kube-system"
+
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller.arn
+    }
+  }
+}
+
+###############################
+# Install AWS Load Balancer Controller
+###############################
+
+resource "helm_release" "alb_controller" {
+  name       = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+
+  set {
+    name  = "clusterName"
+    value = var.cluster_name
+  }
+
+  set {
+    name  = "region"
+    value = var.region
+  }
+
+  # Must disable creation because Terraform creates SA
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = kubernetes_service_account_v1.alb_sa.metadata[0].name
+  }
+
+  depends_on = [
+    kubernetes_service_account_v1.alb_sa,
+    aws_iam_role_policy_attachment.alb_policy_attach
   ]
 }
 
-# resource "kubernetes_service_account_v1" "alb_sa" {
-#   depends_on = [var.alb_role_arn]
-#   metadata {
-#     name      = "aws-load-balancer-controller"
-#     namespace = "kube-system"
-#     annotations = {
-#       "eks.amazonaws.com/role-arn" = var.alb_role_arn
-#     }
-#   }
-# }
 
+###############################
+# Ingress Resource
+###############################
 
-# Deployments for each service
 resource "kubernetes_ingress_v1" "apps_ingress" {
   wait_for_load_balancer = true
 
@@ -52,10 +103,10 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
 
     annotations = {
-      "kubernetes.io/ingress.class"               = "alb"
-      "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type"     = "ip"
-      "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
+      "kubernetes.io/ingress.class"              = "alb"
+      "alb.ingress.kubernetes.io/scheme"         = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"    = "ip"
+      "alb.ingress.kubernetes.io/listen-ports"   = "[{\"HTTPS\":443}]"
       "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
     }
   }
@@ -64,11 +115,11 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     ingress_class_name = "alb"
 
     rule {
-      host = "${var.subdomain}.${var.domain}"
+      host = "api.dev.theareak.click"
 
       http {
         path {
-          path      = "/a"
+          path     = "/a"
           path_type = "Prefix"
 
           backend {
@@ -82,7 +133,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         }
 
         path {
-          path      = "/b"
+          path     = "/b"
           path_type = "Prefix"
 
           backend {
@@ -96,7 +147,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         }
 
         path {
-          path      = "/c"
+          path     = "/c"
           path_type = "Prefix"
 
           backend {

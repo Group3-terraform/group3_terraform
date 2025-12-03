@@ -161,23 +161,18 @@ module "acm" {
 module "ingress" {
   source = "../../modules/ingress"
 
-  providers = {
-    kubernetes = kubernetes
-  }
+  project_name = var.project_name
+  environment  = var.environment
 
-  depends_on = [module.eks]
+  cluster_name = module.eks.cluster_name
+  region       = var.region
 
-  domain              = var.domain
-  subdomain           = var.subdomain
-  acm_certificate_arn = var.acm_certificate_arn
-  tls_secret_name     = var.tls_secret_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider
 
-  service_a_image = var.service_a_image
-  service_b_image = var.service_b_image
-  service_c_image = var.service_c_image
-
-  alb_role_arn = module.iam.alb_controller_role_arn
+  acm_certificate_arn = module.acm.acm_certificate_arn
 }
+
 
 resource "aws_iam_role_policy_attachment" "lb_controller_attach" {
   role       = module.iam.node_role_name
