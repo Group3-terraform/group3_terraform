@@ -43,3 +43,13 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
+
+resource "aws_iam_policy" "aws_load_balancer_controller_policy" {
+  name = "AWSLoadBalancerControllerIAMPolicy"
+  policy = file("${path.module}/iam_policy.json")
+}
+
+resource "aws_iam_role_policy_attachment" "lb_controller_node_attach" {
+  role       = aws_iam_role.node_role.name
+  policy_arn = aws_iam_policy.aws_load_balancer_controller_policy.arn
+}
