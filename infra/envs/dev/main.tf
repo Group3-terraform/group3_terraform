@@ -140,7 +140,14 @@ provider "kubernetes" {
     ]
   }
 }
-
+###########################
+# ACM Module
+###########################
+module "acm" {
+  source = "../../modules/acm"
+  full_domain    = "api.${var.subdomain}.${var.domain}"
+  hosted_zone_id = var.hosted_zone_id
+}
 
 
 ##########################
@@ -154,14 +161,12 @@ module "ingress" {
     kubernetes = kubernetes
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.eks, module.acm]
 
-  # NEW: pass subdomain down to the module
-  
   domain    = var.domain
   subdomain = var.subdomain
 
-  acm_certificate_arn = var.acm_certificate_arn
+  acm_certificate_arn = module.acm.acm_certificate_arn
 
   tls_secret_name = var.tls_secret_name
 
@@ -203,14 +208,4 @@ resource "aws_route53_record" "apps_ingress_dns" {
 
 
 
-
-###############################
-# ACM Certificate must be created in us-east-1 for ALB to use with HTTPS
-################################
-module "acm" {
-  source = "../../modules/acm"
-
-  full_domain    = "api.dev.theareak.click"
-  hosted_zone_id = var.hosted_zone_id
-}
 
