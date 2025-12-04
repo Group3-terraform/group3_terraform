@@ -24,14 +24,14 @@ terraform {
   required_version = ">= 1.6.0"
 }
 
+provider "aws" {
+  region = var.aws_region
+}
 
 # This uses the EKS cluster created by module.eks
 #########################################
 # AWS Provider
 #########################################
-provider "aws" {
-  region = var.aws_region
-}
 
 #########################################
 # Kubernetes Provider (uses EKS cluster)
