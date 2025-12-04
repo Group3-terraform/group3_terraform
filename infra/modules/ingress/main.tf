@@ -16,9 +16,15 @@ data "http" "alb_policy" {
 
 resource "aws_iam_policy" "alb_controller_policy" {
   name        = "${var.project_name}-${var.environment}-alb-controller-policy"
-  description = "IAM policy for AWS Load Balancer Controller"
   policy      = data.http.alb_policy.response_body
+
+  lifecycle {
+    create_before_destroy = true
+    prevent_destroy       = false
+    ignore_changes        = [name]
+  }
 }
+
 
 #########################################
 # IRSA Assume Role Policy
