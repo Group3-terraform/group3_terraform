@@ -50,12 +50,7 @@ provider "kubernetes" {
       "--cluster-name", module.eks.cluster_name
     ]
   }
-
-  depends_on = [
-    module.eks
-  ]
 }
-
 
 #########################################
 # Helm Provider (for aws-load-balancer-controller)
