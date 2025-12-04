@@ -1,14 +1,13 @@
-variable "project_name" { type = string }
-variable "environment"  { type = string }
+variable "project_name" {}
+variable "environment"  {}
 
-variable "aws_region"   { type = string }
-variable "vpc_id"       { type = string }
+variable "aws_region" {}
+variable "vpc_id" {}
+variable "cluster_name" {}
 
-variable "cluster_name" { type = string }
+variable "oidc_provider_arn" {}
+variable "oidc_provider_url" {}
 
-variable "oidc_provider_arn" { type = string }
-variable "oidc_provider_url" { type = string }
-
-variable "ingress_hostname" { type = string }
-variable "route53_zone_id"  { type = string }
-variable "acm_certificate_arn" { type = string }
+variable "acm_certificate_arn" {}
+variable "ingress_hostname" {}
+variable "route53_zone_id" {}

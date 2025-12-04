@@ -1,12 +1,65 @@
 terraform {
-  required_version = ">= 1.8.0"
-}
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
 
-variable "region" {
-  type    = string
-  default = "ap-southeast-1"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.30"
+    }
+
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.13"
+    }
+
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.4"
+    }
+  }
+
+  required_version = ">= 1.6.0"
 }
 
 provider "aws" {
-  region = var.region
+  region = var.aws_region
+}
+
+# This uses the EKS cluster created by module.eks
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_ca)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args = [
+      "eks",
+      "get-token",
+      "--region", var.aws_region,
+      "--cluster-name", module.eks.cluster_name,
+    ]
+  }
+}
+
+# Helm talks to the same EKS cluster
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_ca)
+
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args = [
+        "eks",
+        "get-token",
+        "--region", var.aws_region,
+        "--cluster-name", module.eks.cluster_name,
+      ]
+    }
+  }
 }

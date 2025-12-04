@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "apps" {
 }
 
 #########################################
-# ALB IAM Policy (official AWS JSON)
+# ALB Controller IAM Policy (download official JSON)
 #########################################
 data "http" "alb_policy" {
   url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json"
@@ -21,7 +21,7 @@ resource "aws_iam_policy" "alb_controller_policy" {
 }
 
 #########################################
-# OIDC AssumeRole Policy
+# IRSA Assume Role Policy
 #########################################
 data "aws_iam_policy_document" "alb_assume_role" {
   statement {
@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "alb_assume_role" {
 }
 
 #########################################
-# ALB IAM Role (IRSA)
+# ALB IAM Role
 #########################################
 resource "aws_iam_role" "alb_controller" {
   name               = "${var.project_name}-${var.environment}-alb-controller"
@@ -60,7 +60,7 @@ resource "aws_iam_role_policy_attachment" "alb_policy_attach" {
 }
 
 #########################################
-# Kubernetes Service Account (IRSA)
+# Kubernetes Service Account for ALB
 #########################################
 resource "kubernetes_service_account_v1" "alb_sa" {
   metadata {
@@ -74,7 +74,7 @@ resource "kubernetes_service_account_v1" "alb_sa" {
 }
 
 #########################################
-# Install ALB Controller (helm)
+# Install ALB Controller via Helm
 #########################################
 resource "helm_release" "alb_controller" {
   name       = "aws-load-balancer-controller"
@@ -114,12 +114,15 @@ resource "helm_release" "alb_controller" {
 }
 
 #########################################
-# Services (demo)
+# Placeholder Services (service-a,b,c)
 #########################################
 resource "kubernetes_service_v1" "service_a" {
   metadata {
     name      = "service-a"
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
+    labels = {
+      app = "service-a"
+    }
   }
 
   spec {
@@ -136,6 +139,9 @@ resource "kubernetes_service_v1" "service_b" {
   metadata {
     name      = "service-b"
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
+    labels = {
+      app = "service-b"
+    }
   }
 
   spec {
@@ -152,6 +158,9 @@ resource "kubernetes_service_v1" "service_c" {
   metadata {
     name      = "service-c"
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
+    labels = {
+      app = "service-c"
+    }
   }
 
   spec {
@@ -165,7 +174,7 @@ resource "kubernetes_service_v1" "service_c" {
 }
 
 #########################################
-# Ingress (ALB)
+# Ingress Resource (HTTPS via ALB)
 #########################################
 resource "kubernetes_ingress_v1" "apps_ingress" {
   metadata {
@@ -178,7 +187,6 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
       "alb.ingress.kubernetes.io/target-type"     = "ip"
       "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
       "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
-      "alb.ingress.kubernetes.io/backend-protocol-version" = "HTTP1"
     }
   }
 
@@ -227,4 +235,31 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
       }
     }
   }
+
+  depends_on = [
+    helm_release.alb_controller
+  ]
+}
+
+#########################################
+# Route53 Alias -> ALB Ingress
+#########################################
+data "aws_elb_hosted_zone_id" "main" {
+  region = var.aws_region
+}
+
+resource "aws_route53_record" "apps_ingress_dns" {
+  zone_id = var.route53_zone_id
+  name    = var.ingress_hostname
+  type    = "A"
+
+  alias {
+    name                   = kubernetes_ingress_v1.apps_ingress.status[0].load_balancer[0].ingress[0].hostname
+    zone_id                = data.aws_elb_hosted_zone_id.main.id
+    evaluate_target_health = false
+  }
+
+  depends_on = [
+    kubernetes_ingress_v1.apps_ingress
+  ]
 }
