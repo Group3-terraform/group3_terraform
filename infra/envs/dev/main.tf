@@ -1,21 +1,4 @@
-#########################################
-# Load Variables
-#########################################
 
-variable "project_name" {}
-variable "environment" {}
-variable "domain" {}
-variable "subdomain" {}
-variable "aws_region" {}
-
-variable "cluster_version" {}
-variable "azs" {}
-variable "public_subnets" {}
-variable "private_subnets" {}
-variable "node_min" {}
-variable "node_desired" {}
-variable "node_max" {}
-variable "hosted_zone_id" {}
 
 #########################################
 # VPC Module
@@ -126,16 +109,4 @@ module "ingress" {
     module.eks,
     module.acm
   ]
-}
-
-#########################################
-# Outputs
-#########################################
-
-output "eks_cluster_name" {
-  value = module.eks.cluster_name
-}
-
-output "ingress_hostname" {
-  value = "${var.subdomain}.${var.domain}"
 }
