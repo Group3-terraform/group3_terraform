@@ -165,24 +165,26 @@ module "acm" {
 module "ingress" {
   source = "../../modules/ingress"
 
-  project_name = var.project_name
-  environment  = var.environment
+  project_name  = var.project_name
+  environment   = var.environment
+  aws_region    = var.aws_region
 
-  cluster_name       = module.eks.cluster_name
-  aws_region         = var.aws_region
-  vpc_id             = module.vpc.vpc_id
-  acm_certificate_arn = var.acm_certificate_arn
+  vpc_id        = module.vpc.vpc_id
+  cluster_name  = module.eks.cluster_name
 
   oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = module.eks.oidc_provider
+  oidc_provider_url = module.eks.oidc_provider_url
 
-  ingress_hostname = var.ingress_hostname
-  route53_zone_id  = var.route53_zone_id
+  # Generate hostname from domain + subdomain inside main.tf
+  ingress_hostname = "${var.subdomain}.${var.domain}"
 
-  depends_on = [
-    module.eks
-  ]
+  # Use Route53 zone from tfvars
+  route53_zone_id = var.hosted_zone_id
+
+  # Pass ACM certificate ARN from module.acm output
+  acm_certificate_arn = module.acm.acm_certificate_arn
 }
+
 
 
 

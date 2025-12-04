@@ -29,6 +29,7 @@ node_desired = 1
 node_max     = 2
 
 
+aws_region = "ap-southeast-1"
 
 
 tls_secret_name = "theareak-tls"
