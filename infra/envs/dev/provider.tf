@@ -1,6 +1,4 @@
 terraform {
-  required_version = ">= 1.6.0"
-
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -22,12 +20,25 @@ terraform {
       version = "~> 3.4"
     }
   }
+
+  required_version = ">= 1.6.0"
 }
 
 provider "aws" {
   region = var.aws_region
 }
 
+# This uses the EKS cluster created by module.eks
+#########################################
+# AWS Provider
+#########################################
+provider "aws" {
+  region = var.aws_region
+}
+
+#########################################
+# Kubernetes Provider (uses EKS cluster)
+#########################################
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_ca)
@@ -35,16 +46,18 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
-    args = [
-      "eks", "get-token",
+    args        = [
+      "eks",
+      "get-token",
       "--region", var.aws_region,
       "--cluster-name", module.eks.cluster_name
     ]
   }
-
-  depends_on = [module.eks]
 }
 
+#########################################
+# Helm Provider (for aws-load-balancer-controller)
+#########################################
 provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
@@ -53,13 +66,13 @@ provider "helm" {
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
-      args = [
-        "eks", "get-token",
+      args        = [
+        "eks",
+        "get-token",
         "--region", var.aws_region,
         "--cluster-name", module.eks.cluster_name
       ]
     }
   }
-
-  depends_on = [module.eks]
 }
+
