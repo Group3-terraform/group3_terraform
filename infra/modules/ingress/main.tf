@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "apps" {
 }
 
 #########################################
-# ALB Controller IAM Policy (Official)
+# ALB IAM Policy (official AWS JSON)
 #########################################
 data "http" "alb_policy" {
   url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json"
@@ -21,7 +21,7 @@ resource "aws_iam_policy" "alb_controller_policy" {
 }
 
 #########################################
-# IRSA Assume Role Policy
+# OIDC AssumeRole Policy
 #########################################
 data "aws_iam_policy_document" "alb_assume_role" {
   statement {
@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "alb_assume_role" {
 }
 
 #########################################
-# ALB IAM Role
+# ALB IAM Role (IRSA)
 #########################################
 resource "aws_iam_role" "alb_controller" {
   name               = "${var.project_name}-${var.environment}-alb-controller"
@@ -60,7 +60,7 @@ resource "aws_iam_role_policy_attachment" "alb_policy_attach" {
 }
 
 #########################################
-# Kubernetes Service Account for ALB
+# Kubernetes Service Account (IRSA)
 #########################################
 resource "kubernetes_service_account_v1" "alb_sa" {
   metadata {
@@ -74,7 +74,7 @@ resource "kubernetes_service_account_v1" "alb_sa" {
 }
 
 #########################################
-# Install ALB Controller via Helm
+# Install ALB Controller (helm)
 #########################################
 resource "helm_release" "alb_controller" {
   name       = "aws-load-balancer-controller"
@@ -114,7 +114,7 @@ resource "helm_release" "alb_controller" {
 }
 
 #########################################
-# Placeholder Services (a,b,c)
+# Services (demo)
 #########################################
 resource "kubernetes_service_v1" "service_a" {
   metadata {
@@ -165,7 +165,7 @@ resource "kubernetes_service_v1" "service_c" {
 }
 
 #########################################
-# Ingress Resource (HTTPS via ALB)
+# Ingress (ALB)
 #########################################
 resource "kubernetes_ingress_v1" "apps_ingress" {
   metadata {
@@ -178,6 +178,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
       "alb.ingress.kubernetes.io/target-type"     = "ip"
       "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
       "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/backend-protocol-version" = "HTTP1"
     }
   }
 
@@ -227,4 +228,3 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     }
   }
 }
-
