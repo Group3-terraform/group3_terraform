@@ -32,9 +32,6 @@ provider "aws" {
 #########################################
 # AWS Provider
 #########################################
-provider "aws" {
-  region = var.aws_region
-}
 
 #########################################
 # Kubernetes Provider (uses EKS cluster)
