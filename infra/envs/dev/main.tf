@@ -165,17 +165,25 @@ module "acm" {
 module "ingress" {
   source = "../../modules/ingress"
 
-  cluster_name = module.eks.cluster_name
-  aws_region   = var.region
-  vpc_id       = module.vpc.vpc_id
+  project_name = var.project_name
+  environment  = var.environment
 
-  acm_certificate_arn = module.acm.acm_certificate_arn
+  cluster_name       = module.eks.cluster_name
+  aws_region         = var.aws_region
+  vpc_id             = module.vpc.vpc_id
+  acm_certificate_arn = var.acm_certificate_arn
 
   oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = module.eks.oidc_provider_url
+  oidc_provider_url = module.eks.oidc_provider
 
-  ingress_hostname = "api.dev.theareak.click"
+  ingress_hostname = var.ingress_hostname
+  route53_zone_id  = var.route53_zone_id
+
+  depends_on = [
+    module.eks
+  ]
 }
+
 
 
 

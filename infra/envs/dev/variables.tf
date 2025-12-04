@@ -19,4 +19,4 @@ variable "acm_certificate_arn" {
 
 variable "route53_zone_id" {}
 variable "ingress_hostname" {}
-# variable "region" {}
+variable "aws_region" {}
