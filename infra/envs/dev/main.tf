@@ -165,23 +165,29 @@ module "acm" {
 module "ingress" {
   source = "../../modules/ingress"
 
+  # BASIC INFO
   project_name  = var.project_name
   environment   = var.environment
   aws_region    = var.aws_region
 
+  # NETWORK / EKS
   vpc_id        = module.vpc.vpc_id
   cluster_name  = module.eks.cluster_name
 
+  # IRSA / OIDC
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
 
+  # INGRESS HOSTNAME
   ingress_hostname = "${var.subdomain}.${var.domain}"
 
+  # ROUTE53 ZONE
   route53_zone_id = var.hosted_zone_id
 
-  # THIS IS THE ONE THAT FIXES YOUR ISSUE
+  # IMPORTANT — FIXES THE PROMPT
   acm_certificate_arn = module.acm.acm_certificate_arn
 }
+
 
 
 
