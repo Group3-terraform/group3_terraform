@@ -51,22 +51,6 @@ resource "aws_iam_policy" "aws_load_balancer_controller_policy" {
 }
 
 
-data "aws_iam_policy_document" "alb_assume_role" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    principals {
-      type        = "Federated"
-      identifiers = [var.oidc_provider_arn]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(var.oidc_provider_url, "https://", "")}:sub"
-      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
-    }
-  }
-}
-
 resource "aws_iam_role" "alb_controller_role" {
   name               = "${var.project_name}-${var.environment}-alb-controller-role"
   assume_role_policy = data.aws_iam_policy_document.alb_assume_role.json
