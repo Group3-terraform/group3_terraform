@@ -1,3 +1,6 @@
+#############################################
+# IAM Role for EKS Cluster
+#############################################
 resource "aws_iam_role" "eks_cluster_role" {
   name = "${var.project_name}-${var.environment}-eks-cluster-role"
 
@@ -16,6 +19,9 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
+#############################################
+# IAM Role for EKS Node Group
+#############################################
 resource "aws_iam_role" "eks_node_role" {
   name = "${var.project_name}-${var.environment}-eks-node-role"
 
@@ -44,21 +50,7 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-resource "aws_iam_policy" "aws_load_balancer_controller_policy" {
-  name        = "${var.project_name}-${var.environment}-lb-controller-policy"
-  description = "Policy for AWS Load Balancer Controller"
-  policy      = file("${path.module}/iam_policy.json")
-}
-
-
-resource "aws_iam_role" "alb_controller_role" {
-  name               = "${var.project_name}-${var.environment}-alb-controller-role"
-  assume_role_policy = data.aws_iam_policy_document.alb_assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "alb_controller_attach" {
-  role       = aws_iam_role.alb_controller_role.name
-  policy_arn = aws_iam_policy.aws_load_balancer_controller_policy.arn
-}
-
-
+#############################################
+# NO ALB ROLES SHOULD BE IN IAM MODULE
+#############################################
+# ALB Controller IRSA is created in modules/ingress
