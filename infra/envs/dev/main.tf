@@ -60,7 +60,7 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
-    args = [
+    args        = [
       "eks",
       "get-token",
       "--region", var.aws_region,
@@ -70,6 +70,7 @@ provider "kubernetes" {
 
   depends_on = [module.eks]
 }
+
 
 #########################################
 # ACM Module (Auto Certificate)

@@ -29,6 +29,16 @@ provider "aws" {
 }
 
 # This uses the EKS cluster created by module.eks
+#########################################
+# AWS Provider
+#########################################
+provider "aws" {
+  region = var.aws_region
+}
+
+#########################################
+# Kubernetes Provider (uses EKS cluster)
+#########################################
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_ca)
@@ -36,16 +46,18 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
-    args = [
+    args        = [
       "eks",
       "get-token",
       "--region", var.aws_region,
-      "--cluster-name", module.eks.cluster_name,
+      "--cluster-name", module.eks.cluster_name
     ]
   }
 }
 
-# Helm talks to the same EKS cluster
+#########################################
+# Helm Provider (for aws-load-balancer-controller)
+#########################################
 provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
@@ -54,12 +66,13 @@ provider "helm" {
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
-      args = [
+      args        = [
         "eks",
         "get-token",
         "--region", var.aws_region,
-        "--cluster-name", module.eks.cluster_name,
+        "--cluster-name", module.eks.cluster_name
       ]
     }
   }
 }
+
