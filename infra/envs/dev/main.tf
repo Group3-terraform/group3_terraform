@@ -175,13 +175,11 @@ module "ingress" {
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
 
-  # Generate hostname from domain + subdomain inside main.tf
   ingress_hostname = "${var.subdomain}.${var.domain}"
 
-  # Use Route53 zone from tfvars
   route53_zone_id = var.hosted_zone_id
 
-  # Pass ACM certificate ARN from module.acm output
+  # THIS IS THE ONE THAT FIXES YOUR ISSUE
   acm_certificate_arn = module.acm.acm_certificate_arn
 }
 
