@@ -165,17 +165,18 @@ module "acm" {
 module "ingress" {
   source = "../../modules/ingress"
 
-  project_name = var.project_name
-  environment  = var.environment
-
   cluster_name = module.eks.cluster_name
-  region       = var.region
+  aws_region   = var.region
+  vpc_id       = module.vpc.vpc_id
+
+  acm_certificate_arn = module.acm.acm_certificate_arn
 
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
 
-  acm_certificate_arn = module.acm.acm_certificate_arn
+  ingress_hostname = "api.dev.theareak.click"
 }
+
 
 
 resource "aws_iam_role_policy_attachment" "lb_controller_attach" {
@@ -193,24 +194,23 @@ locals {
 ##########################
 #Route 53 Record for Ingress
 ###########################
+###############################
+# Route 53 Record for Ingress
+###############################
 resource "aws_route53_record" "apps_ingress_dns" {
-  for_each = {
-  always = true
-}
-
-
-  zone_id = var.zone_id
-  name    = "${var.subdomain}.${var.domain}"
+  zone_id = var.route53_zone_id
+  name    = var.ingress_hostname
   type    = "A"
 
   alias {
-    name    = try(module.ingress.ingress_hostname, "")
-    zone_id = data.aws_elb_hosted_zone_id.main.id
+    name                   = kubernetes_ingress_v1.apps_ingress.status[0].load_balancer[0].ingress[0].hostname
+    zone_id                = data.aws_elb_hosted_zone_id.main.id
     evaluate_target_health = false
   }
 
-
-  depends_on = [module.ingress]
+  depends_on = [
+    kubernetes_ingress_v1.apps_ingress
+  ]
 }
 
 

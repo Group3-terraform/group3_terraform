@@ -1,7 +1,15 @@
-output "ingress_name" {
-  value = kubernetes_ingress_v1.apps_ingress.metadata[0].name
+output "alb_service_account_name" {
+  value = kubernetes_service_account_v1.alb_sa.metadata[0].name
+}
+
+output "alb_iam_role_arn" {
+  value = aws_iam_role.alb_controller.arn
 }
 
 output "ingress_hostname" {
-  value = try(kubernetes_ingress_v1.apps_ingress.status[0].load_balancer[0].ingress[0].hostname, "")
+  value = var.ingress_hostname
+}
+
+output "alb_controller_policy_arn" {
+  value = aws_iam_policy.alb_controller_policy.arn
 }

@@ -10,6 +10,7 @@ output "cluster_ca" {
   value = module.eks.cluster_certificate_authority_data
 }
 
+# Correct IRSA outputs
 output "oidc_provider_arn" {
   value = module.eks.oidc_provider_arn
 }

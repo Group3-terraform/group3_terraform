@@ -2,14 +2,13 @@ variable "project_name" {}
 variable "environment" {}
 
 variable "cluster_name" {}
-variable "region" {}
-
+variable "aws_region" {}
+variable "vpc_id" {}
 
 variable "acm_certificate_arn" {}
-variable "oidc_provider_url" {
-  type = string
-}
+variable "oidc_provider_arn" {}
+variable "oidc_provider_url" {}
 
-variable "oidc_provider_arn" {
-  type = string
+variable "ingress_hostname" {
+  description = "Domain name for ALB ingress"
 }
