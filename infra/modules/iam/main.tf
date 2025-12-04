@@ -1,8 +1,3 @@
-variable "project_name" {}
-variable "environment" {}
-variable "oidc_provider_arn" {}
-variable "oidc_provider_url" {}
-
 ############################################
 # EKS Cluster IAM Role
 ############################################
@@ -90,10 +85,3 @@ resource "aws_iam_role_policy_attachment" "alb_controller_attach" {
   role       = aws_iam_role.alb_controller_role.name
   policy_arn = aws_iam_policy.alb_controller_policy.arn
 }
-
-############################################
-# Outputs
-############################################
-output "cluster_role_arn" { value = aws_iam_role.eks_cluster_role.arn }
-output "node_role_arn"    { value = aws_iam_role.eks_node_role.arn }
-output "alb_role_arn"     { value = aws_iam_role.alb_controller_role.arn }
