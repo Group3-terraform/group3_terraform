@@ -76,3 +76,8 @@ variable "service_b_image" {
 variable "service_c_image" {
   type = string
 }
+
+variable "zone_id" {
+  type = string
+  description = "Deprecated: use hosted_zone_id instead"
+}
