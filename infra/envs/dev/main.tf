@@ -90,26 +90,27 @@ module "acm" {
 module "ingress" {
   source = "../../modules/ingress"
 
-  project_name = var.project_name
-  environment  = var.environment
-  aws_region   = var.aws_region
+  project_name        = var.project_name
+  environment         = var.environment
+  aws_region          = var.aws_region
 
-  vpc_id       = module.vpc.vpc_id
-  cluster_name = module.eks.cluster_name
+  vpc_id              = module.vpc.vpc_id
+  cluster_name        = module.eks.cluster_name
 
-  oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = module.eks.oidc_provider_url
+  oidc_provider_arn   = module.eks.oidc_provider_arn
+  oidc_provider_url   = module.eks.oidc_provider_url
 
-  ingress_hostname = "${var.subdomain}.${var.domain}"
-  route53_zone_id  = var.hosted_zone_id
+  ingress_hostname    = "${var.subdomain}.${var.domain}"
+  route53_zone_id     = var.hosted_zone_id
 
   acm_certificate_arn = module.acm.acm_certificate_arn
 
   depends_on = [
-    module.eks,
-    module.acm
+    module.eks,     # wait for cluster + node group
+    module.acm      # wait for ACM before ALB controller uses ARN
   ]
 }
+
 
 #########################################
 # Outputs
