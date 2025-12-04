@@ -1,13 +1,25 @@
-###############################
-# Load global project variables
-###############################
+#########################################
+# Load Variables
+#########################################
 
-# variables are defined in variables.tf and filled via terraform.tfvars
+variable "project_name" {}
+variable "environment" {}
+variable "domain" {}
+variable "subdomain" {}
+variable "aws_region" {}
 
+variable "cluster_version" {}
+variable "azs" {}
+variable "public_subnets" {}
+variable "private_subnets" {}
+variable "node_min" {}
+variable "node_desired" {}
+variable "node_max" {}
+variable "hosted_zone_id" {}
 
-##########################
-# VPC module
-##########################
+#########################################
+# VPC Module
+#########################################
 
 module "vpc" {
   source       = "../../modules/vpc"
@@ -20,20 +32,22 @@ module "vpc" {
   private_subnets = var.private_subnets
 }
 
-##########################
-# IAM module (cluster & node roles)
-##########################
+#########################################
+# IAM Module (Cluster roles + ALB IRSA)
+#########################################
 
 module "iam" {
   source       = "../../modules/iam"
   project_name = var.project_name
   environment  = var.environment
 
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
 }
 
-##########################
-# EKS module
-##########################
+#########################################
+# EKS Module
+#########################################
 
 module "eks" {
   source = "../../modules/eks"
@@ -53,12 +67,31 @@ module "eks" {
   node_max     = var.node_max
 }
 
-##########################
-# ACM Module (Option A)
-##########################
-# Creates ACM certificate for:
-#   full_domain = "${var.subdomain}.${var.domain}"
-# Example (dev): "api.dev.theareak.click"
+#########################################
+# Kubernetes Provider (AFTER EKS READY)
+#########################################
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_ca)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args = [
+      "eks",
+      "get-token",
+      "--region", var.aws_region,
+      "--cluster-name", module.eks.cluster_name
+    ]
+  }
+
+  depends_on = [module.eks]
+}
+
+#########################################
+# ACM Module (Auto Certificate)
+#########################################
 
 module "acm" {
   source = "../../modules/acm"
@@ -67,9 +100,9 @@ module "acm" {
   hosted_zone_id = var.hosted_zone_id
 }
 
-##########################
-# Ingress + ALB Controller + Route53
-##########################
+#########################################
+# Ingress Module (ALB + Services + DNS)
+#########################################
 
 module "ingress" {
   source = "../../modules/ingress"
@@ -84,21 +117,25 @@ module "ingress" {
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
 
-  # For dev: "api.dev.theareak.click"
   ingress_hostname = "${var.subdomain}.${var.domain}"
+  route53_zone_id  = var.hosted_zone_id
 
-  route53_zone_id      = var.hosted_zone_id
-  acm_certificate_arn  = module.acm.acm_certificate_arn
+  acm_certificate_arn = module.acm.acm_certificate_arn
+
+  depends_on = [
+    module.eks,
+    module.acm
+  ]
 }
 
-##########################
-# (Optional) outputs
-##########################
+#########################################
+# Outputs
+#########################################
 
 output "eks_cluster_name" {
   value = module.eks.cluster_name
 }
 
 output "ingress_hostname" {
-  value = module.ingress.ingress_hostname
+  value = "${var.subdomain}.${var.domain}"
 }

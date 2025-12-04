@@ -1,13 +1,17 @@
-#############################################
-# IAM Role for EKS Cluster
-#############################################
+variable "project_name" {}
+variable "environment" {}
+variable "oidc_provider_arn" {}
+variable "oidc_provider_url" {}
+
+############################################
+# EKS Cluster IAM Role
+############################################
 resource "aws_iam_role" "eks_cluster_role" {
   name = "${var.project_name}-${var.environment}-eks-cluster-role"
-
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "eks.amazonaws.com" }
       Action    = "sts:AssumeRole"
     }]
@@ -19,16 +23,15 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
-#############################################
-# IAM Role for EKS Node Group
-#############################################
+############################################
+# EKS Node IAM Role
+############################################
 resource "aws_iam_role" "eks_node_role" {
   name = "${var.project_name}-${var.environment}-eks-node-role"
-
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "ec2.amazonaws.com" }
       Action    = "sts:AssumeRole"
     }]
@@ -50,7 +53,47 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-#############################################
-# NO ALB ROLES SHOULD BE IN IAM MODULE
-#############################################
-# ALB Controller IRSA is created in modules/ingress
+############################################
+# ALB Controller IAM Role (IRSA)
+############################################
+data "aws_iam_policy_document" "alb_assume_role" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_provider_arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(var.oidc_provider_url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(var.oidc_provider_url, "https://", "")}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "alb_controller_role" {
+  name               = "${var.project_name}-${var.environment}-alb-controller-role"
+  assume_role_policy = data.aws_iam_policy_document.alb_assume_role.json
+}
+
+resource "aws_iam_policy" "alb_controller_policy" {
+  name        = "${var.project_name}-${var.environment}-alb-controller-policy"
+  policy      = file("${path.module}/iam_policy.json")
+}
+
+resource "aws_iam_role_policy_attachment" "alb_controller_attach" {
+  role       = aws_iam_role.alb_controller_role.name
+  policy_arn = aws_iam_policy.alb_controller_policy.arn
+}
+
+############################################
+# Outputs
+############################################
+output "cluster_role_arn" { value = aws_iam_role.eks_cluster_role.arn }
+output "node_role_arn"    { value = aws_iam_role.eks_node_role.arn }
+output "alb_role_arn"     { value = aws_iam_role.alb_controller_role.arn }
