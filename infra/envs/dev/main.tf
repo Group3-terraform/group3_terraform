@@ -34,64 +34,19 @@ module "eks" {
   environment     = var.environment
   cluster_version = var.cluster_version
 
-  # IAM Roles from IAM module
   iam_role_arn      = module.iam.cluster_role_arn
   node_iam_role_arn = module.iam.node_role_arn
 
-  # Networking
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
 
-  # Node scaling
   node_min     = var.node_min
   node_desired = var.node_desired
   node_max     = var.node_max
 }
 
 #########################################
-# Kubernetes Provider (Activated After EKS Ready)
-#########################################
-
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_ca)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = [
-      "eks",
-      "get-token",
-      "--region", var.aws_region,
-      "--cluster-name", module.eks.cluster_name
-    ]
-  }
-
-  depends_on = [module.eks]
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_ca)
-
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = [
-        "eks",
-        "get-token",
-        "--region", var.aws_region,
-        "--cluster-name", module.eks.cluster_name
-      ]
-    }
-  }
-
-  depends_on = [module.eks]
-}
-
-#########################################
-# ACM Module (Certificate for ALB)
+# ACM Module (Issue Certificate)
 #########################################
 
 module "acm" {
@@ -112,24 +67,13 @@ module "ingress" {
   environment  = var.environment
   aws_region   = var.aws_region
 
-  # Required for ALB Controller Helm chart
   vpc_id       = module.vpc.vpc_id
   cluster_name = module.eks.cluster_name
 
-  # IRSA role from IAM module
-  alb_role_arn = module.iam.alb_controller_role_arn
-
-  # TLS
+  alb_role_arn        = module.iam.alb_controller_role_arn
   acm_certificate_arn = module.acm.acm_certificate_arn
 
-  # DNS hostname for ingress
   ingress_hostname = "${var.subdomain}.${var.domain}"
-
-  depends_on = [
-    module.eks,
-    module.iam,
-    module.acm
-  ]
 }
 
 #########################################
