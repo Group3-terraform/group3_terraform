@@ -1,11 +1,5 @@
-############################################
-# Get Current IAM Identity
-############################################
 data "aws_caller_identity" "current" {}
 
-############################################
-# EKS Cluster
-############################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 19.18"
@@ -18,22 +12,16 @@ module "eks" {
 
   enable_irsa = true
 
-  ############################################
-  # Cluster API Endpoint Options
-  ############################################
+  # Cluster endpoint settings
   cluster_endpoint_public_access       = true
   cluster_endpoint_private_access      = true
   cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
-  ############################################
-  # IAM Roles for Cluster & Nodes
-  ############################################
-  iam_role_arn      = var.iam_role_arn
-  node_iam_role_arn = var.node_iam_role_arn
+  # IAM ROLE FIX: remove invalid fields
+  # iam_role_arn      = var.iam_role_arn        ❌ REMOVE
+  # node_iam_role_arn = var.node_iam_role_arn   ❌ REMOVE
 
-  ############################################
-  # ADD THIS: RBAC FIX – Give Terraform Access
-  ############################################
+  # RBAC fix
   manage_aws_auth_configmap = true
 
   aws_auth_users = [
@@ -55,9 +43,6 @@ module "eks" {
     }
   ]
 
-  ############################################
-  # Node Group
-  ############################################
   eks_managed_node_groups = {
     default = {
       min_size     = var.node_min
@@ -67,7 +52,7 @@ module "eks" {
       instance_types = ["t3.small"]
       ami_type       = "AL2023_x86_64_STANDARD"
 
-      iam_role_arn = var.node_iam_role_arn
+      iam_role_arn = var.node_iam_role_arn   # ✔ VALID here
     }
   }
 }
