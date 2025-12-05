@@ -1,3 +1,4 @@
+
 #########################################
 # VPC Module
 #########################################
@@ -14,13 +15,16 @@ module "vpc" {
 }
 
 #########################################
-# IAM Module (Cluster + Node + ALB IRSA)
+# IAM Module (Cluster roles + ALB IRSA)
 #########################################
 
 module "iam" {
   source       = "../../modules/iam"
   project_name = var.project_name
   environment  = var.environment
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
 }
 
 #########################################
@@ -46,7 +50,30 @@ module "eks" {
 }
 
 #########################################
-# ACM Module (Issue Certificate)
+# Kubernetes Provider (AFTER EKS READY)
+#########################################
+
+# provider "kubernetes" {
+#   host                   = module.eks.cluster_endpoint
+#   cluster_ca_certificate = base64decode(module.eks.cluster_ca)
+
+#   exec {
+#     api_version = "client.authentication.k8s.io/v1beta1"
+#     command     = "aws"
+#     args        = [
+#       "eks",
+#       "get-token",
+#       "--region", var.aws_region,
+#       "--cluster-name", module.eks.cluster_name
+#     ]
+#   }
+
+#   depends_on = [module.eks]
+# }
+
+
+#########################################
+# ACM Module (Auto Certificate)
 #########################################
 
 module "acm" {
@@ -57,7 +84,7 @@ module "acm" {
 }
 
 #########################################
-# Ingress Module (ALB Controller + Ingress)
+# Ingress Module (ALB + Services + DNS)
 #########################################
 
 module "ingress" {
@@ -70,10 +97,18 @@ module "ingress" {
   vpc_id       = module.vpc.vpc_id
   cluster_name = module.eks.cluster_name
 
-  alb_role_arn        = module.iam.alb_controller_role_arn
-  acm_certificate_arn = module.acm.acm_certificate_arn
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
 
   ingress_hostname = "${var.subdomain}.${var.domain}"
+  route53_zone_id  = var.hosted_zone_id
+
+  acm_certificate_arn = module.acm.acm_certificate_arn
+
+  depends_on = [
+    module.eks,
+    module.acm
+  ]
 }
 
 #########################################

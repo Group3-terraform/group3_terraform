@@ -1,12 +1,13 @@
 variable "project_name" {}
-variable "environment" {}
+variable "environment"  {}
 
 variable "aws_region" {}
-
-variable "cluster_name" {}
 variable "vpc_id" {}
+variable "cluster_name" {}
 
-variable "ingress_hostname" {}
+variable "oidc_provider_arn" {}
+variable "oidc_provider_url" {}
 
-variable "alb_role_arn" {}
 variable "acm_certificate_arn" {}
+variable "ingress_hostname" {}
+variable "route53_zone_id" {}
