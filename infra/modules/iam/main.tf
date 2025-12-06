@@ -77,17 +77,19 @@ resource "aws_iam_role" "alb_controller_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.${var.aws_region}.amazonaws.com/id/*"
+        Federated = "arn:aws:iam::570430250751:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/FDE17E8C655C464CA059FBEF72FFEB2A"
       }
       Action = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
-          "oidc.eks.${var.aws_region}.amazonaws.com/id/*:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+          "oidc.eks.ap-southeast-1.amazonaws.com/id/FDE17E8C655C464CA059FBEF72FFEB2A:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
         }
       }
     }]
   })
 }
+
+
 
 resource "aws_iam_policy" "alb_controller_policy" {
   name   = "${var.project_name}-${var.environment}-alb-controller-policy"
