@@ -69,6 +69,9 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
 # This avoids passing OIDC provider ARN/URL into IAM module.
 ############################################
 
+############################################
+# ALB Controller IAM Role (IRSA)
+############################################
 resource "aws_iam_role" "alb_controller_role" {
   name = "${var.project_name}-${var.environment}-alb-controller-role"
 
@@ -77,7 +80,7 @@ resource "aws_iam_role" "alb_controller_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Federated = "arn:aws:iam::570430250751:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/FDE17E8C655C464CA059FBEF72FFEB2A"
+        Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/FDE17E8C655C464CA059FBEF72FFEB2A"
       }
       Action = "sts:AssumeRoleWithWebIdentity"
       Condition = {
@@ -88,6 +91,7 @@ resource "aws_iam_role" "alb_controller_role" {
     }]
   })
 }
+
 
 
 
