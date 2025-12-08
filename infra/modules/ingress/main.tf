@@ -155,7 +155,7 @@ data "aws_lb" "apps_alb" {
   name = "${var.project_name}-${var.environment}-alb"
 
   depends_on = [
-    data.kubernetes_ingress_v1.apps_ingress_refreshed
+    kubernetes_ingress_v1.apps_ingress
   ]
 }
 
