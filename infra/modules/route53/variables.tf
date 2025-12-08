@@ -2,7 +2,7 @@ variable "hosted_zone_id" {
   type = string
 }
 
-variable "domain_name" {
+variable "record_name" {
   type = string
 }
 

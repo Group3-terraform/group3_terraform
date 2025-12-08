@@ -88,12 +88,11 @@ module "route53" {
   source = "../../modules/route53"
 
   hosted_zone_id = var.hosted_zone_id
-  domain_name    = "${var.subdomain}.${var.domain}"
+  record_name    = "${var.subdomain}.${var.domain}"
 
   alb_dns_name = data.aws_lb.apps_alb.dns_name
   alb_zone_id  = data.aws_lb.apps_alb.zone_id
 }
-
 
 
 
