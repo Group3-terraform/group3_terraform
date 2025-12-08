@@ -1,42 +1,30 @@
-output "alb_dns_name" {
-  value = try(
-    kubernetes_ingress_v1.apps_ingress.status[0].load_balancer[0].ingress[0].hostname,
-    ""
-  )
-}
-
-data "aws_elb_service_account" "this" {}
-
 data "aws_region" "current" {}
 
+# Map of ALB hosted zone IDs by region
 locals {
   alb_zone_ids = {
-    "ap-southeast-1" = "Z1LMS91P8CMLE5"
-    "ap-southeast-2" = "Z1GM3OXH4ZPM65"
     "us-east-1"      = "Z35SXDOTRQ7X7K"
     "us-west-2"      = "Z1H1FL5HABSF5"
+    "ap-southeast-1" = "Z1LMS91P8CMLE5"
+    "ap-southeast-2" = "Z1GM3OXH4ZPM65"
   }
 }
 
-output "alb_zone_id" {
-  value = lookup(local.alb_zone_ids, data.aws_region.current.name, "")
+###########################
+# Outputs
+###########################
+
+# Ingress hostname (your domain)
+output "ingress_hostname" {
+  value = var.ingress_hostname
 }
 
+# Dynamic ALB zone ID (region-aware)
+output "alb_zone_id" {
+  value = local.alb_zone_ids[data.aws_region.current.name]
+}
 
-# output "ingress_hostname" {
-#   value = var.ingress_hostname
-# }
-
-# output "alb_dns_name" {
-#   value = try(
-#     kubernetes_ingress_v1.apps_ingress.status[0].load_balancer[0].ingress[0].hostname,
-#     ""
-#   )
-# }
-
-# output "alb_zone_id" {
-#   value = try(
-#     data.aws_lb.apps_alb.zone_id,
-#     ""
-#   )
-# }
+# ALB name (used to lookup the real ALB in root module)
+output "alb_name" {
+  value = "${var.project_name}-${var.environment}-alb"
+}

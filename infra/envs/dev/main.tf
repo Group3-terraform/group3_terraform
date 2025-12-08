@@ -78,19 +78,22 @@ module "ingress" {
   ingress_hostname = "${var.subdomain}.${var.domain}"
 }
 
+data "aws_lb" "apps_alb" {
+  depends_on = [ module.ingress ]   # IMPORTANT
+  name       = module.ingress.alb_name
+}
+
+
 module "route53" {
   source = "../../modules/route53"
 
   hosted_zone_id = var.hosted_zone_id
-  record_name    = "api.dev.theareak.click"
+  domain_name    = "${var.subdomain}.${var.domain}"
 
-  alb_dns_name = module.ingress.alb_dns_name
-  alb_zone_id  = module.ingress.alb_zone_id
-
-  depends_on = [
-    module.ingress
-  ]
+  alb_dns_name = data.aws_lb.apps_alb.dns_name
+  alb_zone_id  = data.aws_lb.apps_alb.zone_id
 }
+
 
 
 

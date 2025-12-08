@@ -11,6 +11,13 @@ terraform {
   }
 }
 
+##################################
+# Local variable: Dynamic ALB Name
+##################################
+locals {
+  alb_name = "${var.project_name}-${var.environment}-alb"
+}
+
 ##############################
 # Namespace for microservices
 ##############################
@@ -77,7 +84,6 @@ resource "helm_release" "alb_controller" {
 #########################
 # Services (a, b, c)
 #########################
-
 resource "kubernetes_service_v1" "a" {
   metadata {
     name      = "service-a"
@@ -138,29 +144,6 @@ resource "kubernetes_service_v1" "c" {
   }
 }
 
-# Wait for ingress to be created and read its status (ALB DNS)
-data "kubernetes_ingress_v1" "apps_ingress_refreshed" {
-  metadata {
-    name      = kubernetes_ingress_v1.apps_ingress.metadata[0].name
-    namespace = kubernetes_ingress_v1.apps_ingress.metadata[0].namespace
-  }
-
-  depends_on = [
-    kubernetes_ingress_v1.apps_ingress
-  ]
-}
-
-# # Use AWS data source to get zone ID from ALB name
-# data "aws_lb" "apps_alb" {
-#   name = "${var.project_name}-${var.environment}-alb"
-
-#   depends_on = [
-#     kubernetes_ingress_v1.apps_ingress
-#   ]
-# }
-
-
-
 ##############################
 # ALB Ingress
 ##############################
@@ -175,7 +158,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
       "alb.ingress.kubernetes.io/target-type"        = "ip"
       "alb.ingress.kubernetes.io/certificate-arn"    = var.acm_certificate_arn
       "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTPS\":443}]"
-      "alb.ingress.kubernetes.io/load-balancer-name" = "${var.project_name}-${var.environment}-alb"
+
+      # 🔥 use dynamic ALB name
+      "alb.ingress.kubernetes.io/load-balancer-name" = local.alb_name
     }
   }
 
@@ -230,3 +215,4 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     helm_release.alb_controller
   ]
 }
+
