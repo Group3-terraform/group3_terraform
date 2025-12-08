@@ -82,10 +82,16 @@ module "route53" {
   source = "../../modules/route53"
 
   hosted_zone_id = var.hosted_zone_id
-  domain_name    = "api.dev.theareak.click"
-  alb_dns_name   = module.ingress.alb_dns_name
-  alb_zone_id    = module.ingress.alb_zone_id
+  record_name    = "api.dev.theareak.click"
+
+  alb_dns_name = module.ingress.alb_dns_name
+  alb_zone_id  = module.ingress.alb_zone_id
+
+  depends_on = [
+    module.ingress
+  ]
 }
+
 
 
 #########################################

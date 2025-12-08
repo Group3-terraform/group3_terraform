@@ -138,16 +138,27 @@ resource "kubernetes_service_v1" "c" {
   }
 }
 
+# Wait for ingress to be created and read its status (ALB DNS)
 data "kubernetes_ingress_v1" "apps_ingress_refreshed" {
   metadata {
     name      = kubernetes_ingress_v1.apps_ingress.metadata[0].name
-    namespace = "apps"
+    namespace = kubernetes_ingress_v1.apps_ingress.metadata[0].namespace
   }
 
   depends_on = [
     kubernetes_ingress_v1.apps_ingress
   ]
 }
+
+# Use AWS data source to get zone ID from ALB name
+data "aws_lb" "apps_alb" {
+  name = "${var.project_name}-${var.environment}-alb"
+
+  depends_on = [
+    data.kubernetes_ingress_v1.apps_ingress_refreshed
+  ]
+}
+
 
 
 ##############################
@@ -159,12 +170,12 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     namespace = "apps"
 
     annotations = {
-      "kubernetes.io/ingress.class"                    = "alb"
-      "alb.ingress.kubernetes.io/scheme"               = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type"          = "ip"
-      "alb.ingress.kubernetes.io/certificate-arn"      = var.acm_certificate_arn
-      "alb.ingress.kubernetes.io/listen-ports"         = "[{\"HTTPS\":443}]"
-      "alb.ingress.kubernetes.io/load-balancer-name"   = "${var.project_name}-${var.environment}-alb"
+      "kubernetes.io/ingress.class"                  = "alb"
+      "alb.ingress.kubernetes.io/scheme"             = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"        = "ip"
+      "alb.ingress.kubernetes.io/certificate-arn"    = var.acm_certificate_arn
+      "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/load-balancer-name" = "${var.project_name}-${var.environment}-alb"
     }
   }
 
@@ -176,7 +187,6 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         path {
           path      = "/a"
           path_type = "Prefix"
-
           backend {
             service {
               name = kubernetes_service_v1.a.metadata[0].name
@@ -190,7 +200,6 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         path {
           path      = "/b"
           path_type = "Prefix"
-
           backend {
             service {
               name = kubernetes_service_v1.b.metadata[0].name
@@ -204,7 +213,6 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         path {
           path      = "/c"
           path_type = "Prefix"
-
           backend {
             service {
               name = kubernetes_service_v1.c.metadata[0].name
