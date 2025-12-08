@@ -1,8 +1,15 @@
+locals {
+  create_record = (
+    var.alb_dns_name != "" &&
+    var.alb_zone_id  != ""
+  )
+}
+
 resource "aws_route53_record" "alb" {
-  count = var.alb_dns_name != "" ? 1 : 0
+  for_each = local.create_record ? toset([var.record_name]) : toset([])
 
   zone_id = var.hosted_zone_id
-  name    = var.record_name
+  name    = each.key
   type    = "A"
 
   alias {
