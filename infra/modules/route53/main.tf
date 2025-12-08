@@ -11,4 +11,3 @@ resource "aws_route53_record" "alb" {
     evaluate_target_health = false
   }
 }
-

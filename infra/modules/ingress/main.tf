@@ -150,14 +150,14 @@ data "kubernetes_ingress_v1" "apps_ingress_refreshed" {
   ]
 }
 
-# Use AWS data source to get zone ID from ALB name
-data "aws_lb" "apps_alb" {
-  name = "${var.project_name}-${var.environment}-alb"
+# # Use AWS data source to get zone ID from ALB name
+# data "aws_lb" "apps_alb" {
+#   name = "${var.project_name}-${var.environment}-alb"
 
-  depends_on = [
-    kubernetes_ingress_v1.apps_ingress
-  ]
-}
+#   depends_on = [
+#     kubernetes_ingress_v1.apps_ingress
+#   ]
+# }
 
 
 
