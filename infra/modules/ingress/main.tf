@@ -138,6 +138,18 @@ resource "kubernetes_service_v1" "c" {
   }
 }
 
+data "kubernetes_ingress_v1" "apps_ingress_refreshed" {
+  metadata {
+    name      = kubernetes_ingress_v1.apps_ingress.metadata[0].name
+    namespace = "apps"
+  }
+
+  depends_on = [
+    kubernetes_ingress_v1.apps_ingress
+  ]
+}
+
+
 ##############################
 # ALB Ingress
 ##############################
