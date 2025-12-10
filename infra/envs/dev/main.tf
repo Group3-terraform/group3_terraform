@@ -1,5 +1,5 @@
 #########################################
-# VPC Module
+# VPC Module (FIXED with ALB/EKS tags)
 #########################################
 
 module "vpc" {
@@ -11,7 +11,22 @@ module "vpc" {
   azs             = var.azs
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
+
+  # REQUIRED FOR EKS & ALB CONTROLLER
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
+  }
 }
+
 
 #########################################
 # IAM Module (Cluster + Node + ALB IRSA)
