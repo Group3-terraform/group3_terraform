@@ -153,27 +153,31 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     namespace = "apps"
 
     annotations = {
-      # REQUIRED for ALB controller to manage this ingress
-      "kubernetes.io/ingress.class"                  = "alb"
+      # Ingress Class (required for ALB)
+      "kubernetes.io/ingress.class" = "alb"
 
       # ALB settings
-      "alb.ingress.kubernetes.io/scheme"             = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type"        = "ip"
-      "alb.ingress.kubernetes.io/certificate-arn"    = var.acm_certificate_arn
-      "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"     = "ip"
+      "alb.ingress.kubernetes.io/listen-ports"    = "[{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/certificate-arn" = var.acm_certificate_arn
 
-      # Optional custom ALB name
+      # ALB name
       "alb.ingress.kubernetes.io/load-balancer-name" = local.alb_name
+
+      # (Optional but recommended)
+      "alb.ingress.kubernetes.io/healthcheck-path"   = "/a/health"
     }
   }
 
   spec {
-    ingress_class_name = "alb"   # REQUIRED (this was missing)
+    ingress_class_name = "alb"
 
     rule {
       host = var.ingress_hostname
 
       http {
+        # SERVICE A (FastAPI) /a → service-a
         path {
           path      = "/a"
           path_type = "Prefix"
@@ -185,6 +189,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           }
         }
 
+        # SERVICE B
         path {
           path      = "/b"
           path_type = "Prefix"
@@ -196,6 +201,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           }
         }
 
+        # SERVICE C
         path {
           path      = "/c"
           path_type = "Prefix"
