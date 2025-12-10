@@ -92,7 +92,7 @@ resource "kubernetes_service_v1" "a" {
 
   spec {
     selector = {
-      app = "a"
+      app = "service-a"
     }
 
     port {
@@ -112,7 +112,7 @@ resource "kubernetes_service_v1" "b" {
 
   spec {
     selector = {
-      app = "b"
+      app = "service-b"
     }
 
     port {
@@ -132,7 +132,7 @@ resource "kubernetes_service_v1" "c" {
 
   spec {
     selector = {
-      app = "c"
+      app = "service-c"
     }
 
     port {
