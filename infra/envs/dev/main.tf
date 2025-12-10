@@ -78,11 +78,10 @@ module "ingress" {
   ingress_hostname = "${var.subdomain}.${var.domain}"
 }
 
-data "aws_lb" "apps_alb" {
-  depends_on = [ module.ingress ]   # IMPORTANT
-  name       = module.ingress.alb_name
-}
-
+# data "aws_lb" "apps_alb" {
+#   depends_on = [ module.ingress ]
+#   name       = module.ingress.alb_name
+# }
 
 module "route53" {
   source = "../../modules/route53"
@@ -91,10 +90,10 @@ module "route53" {
   domain_name    = "${var.subdomain}.${var.domain}"   # api.dev.theareak.click
 
   # For dev (what you already know from AWS console):
-  # alb_dns_name = "group3-dev-alb-555815385.ap-southeast-1.elb.amazonaws.com"
-  # alb_zone_id  = "Z1LMS91P8CMLE5"
-  alb_dns_name = data.aws_lb.apps_alb.dns_name
-  alb_zone_id  = data.aws_lb.apps_alb.zone_id
+  alb_dns_name = "group3-dev-alb-555815385.ap-southeast-1.elb.amazonaws.com"
+  alb_zone_id  = "Z1LMS91P8CMLE5"
+  # alb_dns_name = data.aws_lb.apps_alb.dns_name
+  # alb_zone_id  = data.aws_lb.apps_alb.zone_id
 }
 
 
