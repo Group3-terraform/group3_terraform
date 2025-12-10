@@ -153,18 +153,23 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     namespace = "apps"
 
     annotations = {
+      # REQUIRED for ALB controller to manage this ingress
       "kubernetes.io/ingress.class"                  = "alb"
+
+      # ALB settings
       "alb.ingress.kubernetes.io/scheme"             = "internet-facing"
       "alb.ingress.kubernetes.io/target-type"        = "ip"
       "alb.ingress.kubernetes.io/certificate-arn"    = var.acm_certificate_arn
       "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTPS\":443}]"
 
-      # 🔥 use dynamic ALB name
+      # Optional custom ALB name
       "alb.ingress.kubernetes.io/load-balancer-name" = local.alb_name
     }
   }
 
   spec {
+    ingress_class_name = "alb"   # REQUIRED (this was missing)
+
     rule {
       host = var.ingress_hostname
 
@@ -175,9 +180,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.a.metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -188,9 +191,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.b.metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -201,9 +202,7 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
           backend {
             service {
               name = kubernetes_service_v1.c.metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
@@ -215,4 +214,3 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
     helm_release.alb_controller
   ]
 }
-
