@@ -12,13 +12,14 @@ module "vpc" {
   enable_nat_gateway = true
   single_nat_gateway = true
 
-  # REQUIRED TAGS FOR AWS LOAD BALANCER CONTROLLER
+  # REQUIRED FOR EKS & ALB CONTROLLER
+  # Public subnets must be tagged for ALB (internet-facing)
   public_subnet_tags = {
     "kubernetes.io/role/elb" = "1"
     "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
   }
 
-  # If using internal ALBs later
+  # Private subnets for internal load balancers
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = "1"
     "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
