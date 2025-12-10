@@ -18,13 +18,23 @@ private_subnets = [
   "10.0.48.0/20",
 ]
 
+hosted_zone_id  = "Z07852252OWMU8O090PPL"
+
+zone_id = "Z07852252OWMU8O090PPL"
+
+domain          = "theareak.click"
+subdomain       = "api.dev"
+
 node_min     = 1
 node_desired = 1
 node_max     = 2
 
-domain          = "api.dev.theareak.click"
+
+aws_region = "ap-southeast-1"
+
+
 tls_secret_name = "theareak-tls"
 
-service_a_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-a:latest"
-service_b_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-b:latest"
-service_c_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-c:latest"
+service_a_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-a:dev-v1.0.16"
+service_b_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-b:dev-v1.0.12"
+service_c_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-c:dev-v1.0.12"

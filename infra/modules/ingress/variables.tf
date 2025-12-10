@@ -1,20 +1,12 @@
-variable "service_a_image" {
-  type = string
-}
+variable "project_name" {}
+variable "environment" {}
 
-variable "service_b_image" {
-  type = string
-}
+variable "aws_region" {}
 
-variable "service_c_image" {
-  type = string
-}
+variable "cluster_name" {}
+variable "vpc_id" {}
 
-variable "domain" {
-  type = string
-}
+variable "ingress_hostname" {}
 
-variable "tls_secret_name" {
-  type        = string
-  description = "Kubernetes TLS secret for NGINX ingress (cert + key)"
-}
+variable "alb_role_arn" {}
+variable "acm_certificate_arn" {}

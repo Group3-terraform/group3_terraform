@@ -1,99 +1,98 @@
-# Namespace for our apps
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.29"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.12"
+    }
+  }
+}
+
+##################################
+# Local variable: Dynamic ALB Name
+##################################
+locals {
+  alb_name = "${var.project_name}-${var.environment}-alb"
+}
+
+##############################
+# Namespace for microservices
+##############################
 resource "kubernetes_namespace_v1" "apps" {
   metadata {
     name = "apps"
   }
 }
 
-locals {
-  services = [
-    { name = "service-a"
-        image = var.service_a_image 
-    },
-    { name = "service-b"
-        image = var.service_b_image 
-    },
-    { name = "service-c"
-        image = var.service_c_image 
-    },
+###############################################
+# ALB Controller Service Account (IRSA enabled)
+###############################################
+resource "kubernetes_service_account_v1" "alb_sa" {
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = "kube-system"
+
+    annotations = {
+      "eks.amazonaws.com/role-arn" = var.alb_role_arn
+    }
+  }
+}
+
+###############################################
+# Install AWS Load Balancer Controller (Helm)
+###############################################
+resource "helm_release" "alb_controller" {
+  name       = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+
+  set {
+    name  = "clusterName"
+    value = var.cluster_name
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = kubernetes_service_account_v1.alb_sa.metadata[0].name
+  }
+
+  set {
+    name  = "region"
+    value = var.aws_region
+  }
+
+  set {
+    name  = "vpcId"
+    value = var.vpc_id
+  }
+
+  depends_on = [
+    kubernetes_service_account_v1.alb_sa
   ]
 }
 
-# Deployments for each service
-resource "kubernetes_deployment_v1" "api" {
-  for_each = { for s in local.services : s.name => s }
-
+#########################
+# Services (a, b, c)
+#########################
+resource "kubernetes_service_v1" "a" {
   metadata {
-    name      = each.key
+    name      = "service-a"
     namespace = kubernetes_namespace_v1.apps.metadata[0].name
-    labels = {
-      app = each.key
-    }
-  }
-
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        app = each.key
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = each.key
-        }
-      }
-
-      spec {
-        container {
-          name  = each.key
-          image = each.value.image
-
-          port {
-            container_port = 8080
-          }
-
-          readiness_probe {
-            http_get {
-              path = "/health"
-              port = 8080
-            }
-            initial_delay_seconds = 3
-            period_seconds        = 10
-          }
-
-          liveness_probe {
-            http_get {
-              path = "/health"
-              port = 8080
-            }
-            initial_delay_seconds = 10
-            period_seconds        = 20
-          }
-        }
-      }
-    }
-  }
-}
-
-# ClusterIP services
-resource "kubernetes_service_v1" "api" {
-  for_each = kubernetes_deployment_v1.api
-
-  metadata {
-    name      = each.key
-    namespace = each.value.metadata[0].namespace
-    labels = {
-      app = each.key
-    }
   }
 
   spec {
     selector = {
-      app = each.key
+      app = "a"
     }
 
     port {
@@ -105,33 +104,77 @@ resource "kubernetes_service_v1" "api" {
   }
 }
 
-# Ingress (NGINX)
+resource "kubernetes_service_v1" "b" {
+  metadata {
+    name      = "service-b"
+    namespace = kubernetes_namespace_v1.apps.metadata[0].name
+  }
+
+  spec {
+    selector = {
+      app = "b"
+    }
+
+    port {
+      port        = 80
+      target_port = 8080
+    }
+
+    type = "ClusterIP"
+  }
+}
+
+resource "kubernetes_service_v1" "c" {
+  metadata {
+    name      = "service-c"
+    namespace = kubernetes_namespace_v1.apps.metadata[0].name
+  }
+
+  spec {
+    selector = {
+      app = "c"
+    }
+
+    port {
+      port        = 80
+      target_port = 8080
+    }
+
+    type = "ClusterIP"
+  }
+}
+
+##############################
+# ALB Ingress
+##############################
 resource "kubernetes_ingress_v1" "apps_ingress" {
   metadata {
     name      = "apps-ingress"
-    namespace = kubernetes_namespace_v1.apps.metadata[0].name
+    namespace = "apps"
+
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
+      "kubernetes.io/ingress.class"                  = "alb"
+      "alb.ingress.kubernetes.io/scheme"             = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"        = "ip"
+      "alb.ingress.kubernetes.io/certificate-arn"    = var.acm_certificate_arn
+      "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTPS\":443}]"
+
+      # 🔥 use dynamic ALB name
+      "alb.ingress.kubernetes.io/load-balancer-name" = local.alb_name
     }
   }
 
   spec {
-    tls {
-      hosts      = [var.domain]
-      secret_name = var.tls_secret_name
-    }
-
     rule {
-      host = var.domain
+      host = var.ingress_hostname
 
       http {
         path {
           path      = "/a"
           path_type = "Prefix"
-
           backend {
             service {
-              name = kubernetes_service_v1.api["service-a"].metadata[0].name
+              name = kubernetes_service_v1.a.metadata[0].name
               port {
                 number = 80
               }
@@ -142,10 +185,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         path {
           path      = "/b"
           path_type = "Prefix"
-
           backend {
             service {
-              name = kubernetes_service_v1.api["service-b"].metadata[0].name
+              name = kubernetes_service_v1.b.metadata[0].name
               port {
                 number = 80
               }
@@ -156,10 +198,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
         path {
           path      = "/c"
           path_type = "Prefix"
-
           backend {
             service {
-              name = kubernetes_service_v1.api["service-c"].metadata[0].name
+              name = kubernetes_service_v1.c.metadata[0].name
               port {
                 number = 80
               }
@@ -169,4 +210,9 @@ resource "kubernetes_ingress_v1" "apps_ingress" {
       }
     }
   }
+
+  depends_on = [
+    helm_release.alb_controller
+  ]
 }
+

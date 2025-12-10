@@ -1,72 +1,6 @@
-###############################
-# Load global project variables
-###############################
-
-variable "project_name" {}
-variable "environment"  {}
-
-variable "cluster_version" {
-  type    = string
-  default = "1.34"
-}
-
-variable "azs" {
-  type = list(string)
-}
-
-variable "public_subnets" {
-  type = list(string)
-}
-
-variable "private_subnets" {
-  type = list(string)
-}
-
-variable "node_min" {
-  type = number
-}
-
-variable "node_desired" {
-  type = number
-}
-
-variable "node_max" {
-  type = number
-}
-
-variable "domain" {
-  type = string
-}
-
-variable "tls_secret_name" {
-  type = string
-}
-
-variable "service_a_image" {
-  type = string
-}
-
-variable "service_b_image" {
-  type = string
-}
-
-variable "service_c_image" {
-  type = string
-}
-
-##########################
-# IAM module
-##########################
-
-module "iam" {
-  source       = "../../modules/iam"
-  project_name = var.project_name
-  environment  = var.environment
-}
-
-##########################
-# VPC module
-##########################
+#########################################
+# VPC Module (FIXED with ALB/EKS tags)
+#########################################
 
 module "vpc" {
   source       = "../../modules/vpc"
@@ -77,11 +11,38 @@ module "vpc" {
   azs             = var.azs
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
+
+  # REQUIRED FOR EKS & ALB CONTROLLER
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
+  }
 }
 
-##########################
-# EKS module
-##########################
+
+#########################################
+# IAM Module (Cluster + Node + ALB IRSA)
+#########################################
+
+module "iam" {
+  source       = "../../modules/iam"
+  project_name = var.project_name
+  environment  = var.environment
+  aws_region   = var.aws_region
+}
+
+
+#########################################
+# EKS Module
+#########################################
 
 module "eks" {
   source = "../../modules/eks"
@@ -101,39 +62,65 @@ module "eks" {
   node_max     = var.node_max
 }
 
-###################################################
-# Load EKS connection details after cluster exists
-###################################################
+#########################################
+# ACM Module (Issue Certificate)
+#########################################
 
-data "aws_eks_cluster" "this" {
-  name = module.eks.cluster_name
+module "acm" {
+  source = "../../modules/acm"
+
+  full_domain    = "${var.subdomain}.${var.domain}"
+  hosted_zone_id = var.hosted_zone_id
 }
 
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
-}
-
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.this.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.this.token
-}
-
-##########################
-# Ingress + Services
-##########################
+#########################################
+# Ingress Module (ALB Controller + Ingress)
+#########################################
 
 module "ingress" {
   source = "../../modules/ingress"
 
-  providers = {
-    kubernetes = kubernetes
-  }
+  project_name = var.project_name
+  environment  = var.environment
+  aws_region   = var.aws_region
 
-  domain          = var.domain
-  tls_secret_name = var.tls_secret_name
+  vpc_id       = module.vpc.vpc_id
+  cluster_name = module.eks.cluster_name
 
-  service_a_image = var.service_a_image
-  service_b_image = var.service_b_image
-  service_c_image = var.service_c_image
+  alb_role_arn        = module.iam.alb_controller_role_arn
+  acm_certificate_arn = module.acm.acm_certificate_arn
+
+  ingress_hostname = "${var.subdomain}.${var.domain}"
+}
+
+# data "aws_lb" "apps_alb" {
+#   depends_on = [ module.ingress ]
+#   name       = module.ingress.alb_name
+# }
+
+module "route53" {
+  source = "../../modules/route53"
+
+  hosted_zone_id = var.hosted_zone_id
+  domain_name    = "${var.subdomain}.${var.domain}"   # api.dev.theareak.click
+
+  # For dev (what you already know from AWS console):
+  alb_dns_name = "group3-dev-alb-555815385.ap-southeast-1.elb.amazonaws.com"
+  alb_zone_id  = "Z1LMS91P8CMLE5"
+  # alb_dns_name = data.aws_lb.apps_alb.dns_name
+  # alb_zone_id  = data.aws_lb.apps_alb.zone_id
+}
+
+
+
+#########################################
+# Outputs
+#########################################
+
+output "eks_cluster_name" {
+  value = module.eks.cluster_name
+}
+
+output "ingress_hostname" {
+  value = "${var.subdomain}.${var.domain}"
 }

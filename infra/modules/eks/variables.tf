@@ -16,3 +16,4 @@ variable "private_subnets" {
 variable "node_min" {}
 variable "node_desired" {}
 variable "node_max" {}
+ 
