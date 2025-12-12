@@ -80,7 +80,7 @@ module "eks" {
       max_size     = var.node_max
       desired_size = var.node_desired
 
-      instance_types = ["t3.small"]
+      instance_types = ["t3.medium"]
       ami_type       = "AL2023_x86_64_STANDARD"
 
       iam_role_arn = var.node_iam_role_arn
