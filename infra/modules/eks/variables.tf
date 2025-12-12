@@ -17,6 +17,6 @@ variable "node_min" {}
 variable "node_desired" {}
 variable "node_max" {}
  
- variable "admin_user_arn" {
-  type = string
-}
+#  variable "admin_user_arn" {
+#   type = string
+# }
