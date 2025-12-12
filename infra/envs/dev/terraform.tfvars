@@ -26,9 +26,8 @@ domain          = "theareak.click"
 subdomain       = "api.dev"
 
 node_min     = 1
-node_desired = 1
-node_max     = 2
-
+node_desired = 3
+node_max     = 4
 
 aws_region = "ap-southeast-1"
 
