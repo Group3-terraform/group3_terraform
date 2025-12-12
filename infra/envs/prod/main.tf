@@ -1,26 +1,110 @@
-module "eks_3api" {
-  source = "../../modules/eks-3api"
+#########################################
+# VPC Module
+#########################################
 
-  project_name = "group3"
-  environment  = "prod"
-  region       = "ap-southeast-1"
+module "vpc" {
+  source       = "../../modules/vpc"
+  project_name = var.project_name
+  environment  = var.environment
 
-  cluster_version = "1.34"
+  vpc_cidr        = "10.0.0.0/16"
+  azs             = var.azs
+  public_subnets  = var.public_subnets
+  private_subnets = var.private_subnets
+}
 
-  node_min     = 1
-  node_desired = 1
-  node_max     = 2
+#########################################
+# IAM Module (Cluster + Node + ALB IRSA)
+#########################################
 
-  azs = ["ap-southeast-1a", "ap-southeast-1b"]
-  public_subnets  = ["10.0.0.0/20", "10.0.16.0/20"]
-  private_subnets = ["10.0.32.0/20", "10.0.48.0/20"]
+module "iam" {
+  source       = "../../modules/iam"
+  project_name = var.project_name
+  environment  = var.environment
+}
 
-  zone_id = "Z07852252OWMU8O090PPL"
-  domain  = "api.prod.theareak.click"
 
-  acm_arn = "arn:aws:acm:us-east-1:570430250751:certificate/CHANGE_ME"
+#########################################
+# EKS Module
+#########################################
 
-  service_a_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-a:latest"
-  service_b_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-b:latest"
-  service_c_image = "570430250751.dkr.ecr.ap-southeast-1.amazonaws.com/service-c:latest"
+module "eks" {
+  source = "../../modules/eks"
+
+  project_name    = var.project_name
+  environment     = var.environment
+  cluster_version = var.cluster_version
+
+  iam_role_arn      = module.iam.cluster_role_arn
+  node_iam_role_arn = module.iam.node_role_arn
+
+  vpc_id          = module.vpc.vpc_id
+  private_subnets = module.vpc.private_subnets
+
+  node_min     = var.node_min
+  node_desired = var.node_desired
+  node_max     = var.node_max
+}
+
+#########################################
+# ACM Module (Issue Certificate)
+#########################################
+
+module "acm" {
+  source = "../../modules/acm"
+
+  full_domain    = "${var.subdomain}.${var.domain}"
+  hosted_zone_id = var.hosted_zone_id
+}
+
+#########################################
+# Ingress Module (ALB Controller + Ingress)
+#########################################
+
+module "ingress" {
+  source = "../../modules/ingress"
+
+  project_name = var.project_name
+  environment  = var.environment
+  aws_region   = var.aws_region
+
+  vpc_id       = module.vpc.vpc_id
+  cluster_name = module.eks.cluster_name
+
+  alb_role_arn        = module.iam.alb_controller_role_arn
+  acm_certificate_arn = module.acm.acm_certificate_arn
+
+  ingress_hostname = "${var.subdomain}.${var.domain}"
+}
+
+# data "aws_lb" "apps_alb" {
+#   depends_on = [ module.ingress ]
+#   name       = module.ingress.alb_name
+# }
+
+module "route53" {
+  source = "../../modules/route53"
+
+  hosted_zone_id = var.hosted_zone_id
+  domain_name    = "${var.subdomain}.${var.domain}"   # api.prod.theareak.click
+
+  # For prod (what you already know from AWS console):
+  alb_dns_name = "group3-prod-alb-555815385.ap-southeast-1.elb.amazonaws.com"
+  alb_zone_id  = "Z1LMS91P8CMLE5"
+  # alb_dns_name = data.aws_lb.apps_alb.dns_name
+  # alb_zone_id  = data.aws_lb.apps_alb.zone_id
+}
+
+
+
+#########################################
+# Outputs
+#########################################
+
+output "eks_cluster_name" {
+  value = module.eks.cluster_name
+}
+
+output "ingress_hostname" {
+  value = "${var.subdomain}.${var.domain}"
 }
