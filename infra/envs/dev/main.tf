@@ -95,15 +95,4 @@ module "route53" {
   # alb_zone_id  = data.aws_lb.apps_alb.zone_id
 }
 
-module "cloudwatch" {
-  source = "../../modules/cloudwatch"
-
-  project_name = var.project_name
-  environment  = var.environment
-
-  cluster_name      = module.eks.cluster_name
-  cluster_endpoint  = module.eks.cluster_endpoint
-  cluster_ca        = module.eks.cluster_certificate_authority
-  oidc_provider_arn = module.eks.oidc_provider_arn
-}
 
