@@ -12,16 +12,10 @@ module "eks" {
 
   enable_irsa = true
 
-  # Cluster endpoint settings
   cluster_endpoint_public_access       = true
   cluster_endpoint_private_access      = true
   cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
-  # IAM ROLE FIX: remove invalid fields
-  # iam_role_arn      = var.iam_role_arn        ❌ REMOVE
-  # node_iam_role_arn = var.node_iam_role_arn   ❌ REMOVE
-
-  # RBAC fix
   manage_aws_auth_configmap = true
 
   aws_auth_users = [
@@ -36,23 +30,27 @@ module "eks" {
     {
       rolearn  = var.node_iam_role_arn
       username = "system:node:{{EC2PrivateDNSName}}"
-      groups = [
-        "system:bootstrappers",
-        "system:nodes"
-      ]
+      groups   = ["system:bootstrappers", "system:nodes"]
     }
   ]
 
   eks_managed_node_groups = {
     default = {
-      min_size     = var.node_min
-      max_size     = var.node_max
-      desired_size = var.node_desired
-
-      instance_types = ["t3.small"]
+      name           = "default"
+      min_size       = var.node_min
+      max_size       = var.node_max
+      desired_size   = var.node_desired
+      instance_types = ["t3.medium"]
       ami_type       = "AL2023_x86_64_STANDARD"
-
-      iam_role_arn = var.node_iam_role_arn   # ✔ VALID here
+      iam_role_arn   = var.node_iam_role_arn
     }
   }
+
+  cluster_enabled_log_types = [
+    "api",
+    "audit",
+    "authenticator",
+    "controllerManager",
+    "scheduler"
+  ]
 }

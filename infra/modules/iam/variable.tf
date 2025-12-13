@@ -1,16 +1,7 @@
+variable "project_name" {}
+variable "environment" {}
+
 variable "cluster_oidc_issuer" {
+  description = "OIDC issuer URL from EKS"
   type        = string
-  description = "OIDC issuer URL from EKS cluster"
-}
-
-variable "project_name" {
-  type = string
-}
-
-variable "environment" {
-  type = string
-}
-
-variable "cluster_name" {
-  type = string
 }

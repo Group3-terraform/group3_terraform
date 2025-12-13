@@ -12,10 +12,22 @@ module "vpc" {
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
 }
+module "eks" {
+  source = "../../modules/eks"
 
-#########################################
-# IAM Module (Cluster + Node + ALB IRSA)
-#########################################
+  project_name    = var.project_name
+  environment     = var.environment
+  cluster_version = var.cluster_version
+
+  vpc_id          = module.vpc.vpc_id
+  private_subnets = module.vpc.private_subnets
+
+  node_iam_role_arn = module.iam.node_role_arn
+
+  node_min     = 1
+  node_max     = 4
+  node_desired = 3
+}
 
 module "iam" {
   source = "../../modules/iam"
@@ -25,30 +37,6 @@ module "iam" {
   cluster_oidc_issuer = module.eks.cluster_oidc_issuer
 }
 
-
-
-
-#########################################
-# EKS Module
-#########################################
-
-module "eks" {
-  source = "../../modules/eks"
-
-  project_name    = var.project_name
-  environment     = var.environment
-  cluster_version = var.cluster_version
-
-  iam_role_arn      = module.iam.cluster_role_arn
-  node_iam_role_arn = module.iam.node_role_arn
-
-  vpc_id          = module.vpc.vpc_id
-  private_subnets = module.vpc.private_subnets
-
-  node_min     = var.node_min
-  node_desired = var.node_desired
-  node_max     = var.node_max
-}
 
 #########################################
 # ACM Module (Issue Certificate)
