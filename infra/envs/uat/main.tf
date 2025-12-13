@@ -29,12 +29,13 @@ module "eks" {
   node_desired = 3
 }
 
-# module "iam" {
-#   source = "../../modules/iam"
+module "iam" {
+  source       = "../../modules/iam"
+  project_name = var.project_name
+  environment  = var.environment
+  aws_region   = var.aws_region
+}
 
-#   project_name = var.project_name
-#   environment  = var.environment
-# }
 
 
 #########################################
