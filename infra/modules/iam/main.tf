@@ -14,12 +14,9 @@ data "aws_caller_identity" "current" {}
 # LOCALS: OIDC Hostpath & ARN
 ############################################
 locals {
-  # e.g. oidc.eks.ap-southeast-1.amazonaws.com/id/E2D59097C67FD7C2A508F4105F4BA7BF
-  oidc_hostpath = replace(data.aws_eks_cluster.eks.identity[0].oidc[0].issuer, "https://", "")
-
-  # arn:aws:iam::<account-id>:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/...
-  oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${local.oidc_hostpath}"
+  oidc_hostpath = replace(var.cluster_oidc_issuer, "https://", "")
 }
+
 
 ############################################
 # EKS Cluster IAM Role
