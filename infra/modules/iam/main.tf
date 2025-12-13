@@ -14,8 +14,11 @@ data "aws_caller_identity" "current" {}
 # LOCALS: OIDC Hostpath & ARN
 ############################################
 locals {
-  oidc_hostpath = replace(var.cluster_oidc_issuer, "https://", "")
+  oidc_hostpath = var.cluster_oidc_issuer != null
+    ? replace(var.cluster_oidc_issuer, "https://", "")
+    : null
 }
+
 
 
 ############################################
