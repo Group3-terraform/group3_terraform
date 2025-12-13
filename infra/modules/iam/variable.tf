@@ -12,4 +12,8 @@ variable "cluster_name" {
 
 variable "cluster_oidc_issuer" {
   type = string
+  locals {
+  oidc_hostpath = replace(var.cluster_oidc_issuer, "https://", "")
+}
+
 }

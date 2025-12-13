@@ -24,7 +24,7 @@ module "iam" {
   environment  = var.environment
 
   cluster_name = module.eks.cluster_name
-  cluster_oidc_issuer = module.eks.oidc_provider
+  cluster_oidc_issuer = module.eks.oidc_provider_url
 }
 
 
