@@ -16,8 +16,9 @@ data "aws_caller_identity" "current" {}
 locals {
   oidc_hostpath = var.cluster_oidc_issuer != null
     ? replace(var.cluster_oidc_issuer, "https://", "")
-    : null
+    : ""
 }
+
 
 
 
