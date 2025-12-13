@@ -18,3 +18,8 @@ output "oidc_provider_arn" {
 output "oidc_provider_url" {
   value = module.eks.oidc_provider
 }
+
+output "cluster_oidc_issuer" {
+  description = "OIDC issuer URL for IRSA"
+  value       = module.eks.oidc_provider
+}

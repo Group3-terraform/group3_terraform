@@ -23,8 +23,8 @@ module "iam" {
   project_name        = var.project_name
   environment         = var.environment
   cluster_oidc_issuer = module.eks.cluster_oidc_issuer
-  cluster_name = module.eks.cluster_name
 }
+
 
 
 
