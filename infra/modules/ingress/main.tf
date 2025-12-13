@@ -35,11 +35,12 @@ resource "kubernetes_service_account_v1" "alb_sa" {
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"
 
-    annotations = {
+    annotations = var.alb_role_arn == null ? {} : {
       "eks.amazonaws.com/role-arn" = var.alb_role_arn
     }
   }
 }
+
 
 ###############################################
 # Install AWS Load Balancer Controller (Helm)
