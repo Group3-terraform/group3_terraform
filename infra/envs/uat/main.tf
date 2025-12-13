@@ -62,7 +62,7 @@ module "ingress" {
   vpc_id       = module.vpc.vpc_id
   cluster_name = module.eks.cluster_name
 
-  alb_role_arn        = module.iam.alb_controller_role_arn
+  # alb_role_arn        = module.iam.alb_controller_role_arn
   acm_certificate_arn = module.acm.acm_certificate_arn
 
   ingress_hostname = "${var.subdomain}.${var.domain}"
