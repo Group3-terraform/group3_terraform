@@ -6,9 +6,9 @@ data "aws_caller_identity" "current" {}
 ############################################
 # DATA: EKS Cluster (for OIDC)
 ############################################
-data "aws_eks_cluster" "eks" {
-  name = "${var.project_name}-${var.environment}-eks"
-}
+# data "aws_eks_cluster" "eks" {
+#   name = "${var.project_name}-${var.environment}-eks"
+# }
 
 ############################################
 # LOCALS: OIDC Hostpath & ARN
