@@ -28,15 +28,18 @@ variable "private_subnets" {
 }
 
 variable "node_min" {
-  type = number
-}
-
-variable "node_desired" {
-  type = number
+  type    = number
+  default = 1
 }
 
 variable "node_max" {
-  type = number
+  type    = number
+  default = 4
+}
+
+variable "node_desired" {
+  type    = number
+  default = 3
 }
 
 ###############################

@@ -21,14 +21,20 @@ module "iam" {
 module "eks" {
   source = "../../modules/eks"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  cluster_version   = var.cluster_version
-  vpc_id            = module.vpc.vpc_id
-  private_subnets   = module.vpc.private_subnets
+  project_name    = var.project_name
+  environment     = var.environment
+  cluster_version = var.cluster_version
+
+  vpc_id          = module.vpc.vpc_id
+  private_subnets = module.vpc.private_subnets
 
   node_iam_role_arn = module.iam.node_role_arn
+
+  node_min     = var.node_min
+  node_max     = var.node_max
+  node_desired = var.node_desired
 }
+
 
 
 
