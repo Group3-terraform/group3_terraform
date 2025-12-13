@@ -10,3 +10,7 @@ variable "project_name" {
 variable "environment" {
   type = string
 }
+
+variable "cluster_name" {
+  type = string
+}
