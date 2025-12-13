@@ -81,3 +81,7 @@ variable "zone_id" {
   type = string
   description = "Deprecated: use hosted_zone_id instead"
 }
+variable "enable_iam" {
+  type    = bool
+  default = true
+}

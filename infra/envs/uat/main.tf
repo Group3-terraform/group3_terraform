@@ -22,7 +22,7 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
 
-  node_iam_role_arn = module.iam.node_role_arn
+  node_iam_role_arn = var.enable_iam ? module.iam[0].node_role_arn : null
 
   node_min     = 1
   node_max     = 4
@@ -30,11 +30,13 @@ module "eks" {
 }
 
 module "iam" {
+  count        = var.enable_iam ? 1 : 0
   source       = "../../modules/iam"
   project_name = var.project_name
   environment  = var.environment
   aws_region   = var.aws_region
 }
+
 
 
 
